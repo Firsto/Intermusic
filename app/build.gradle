@@ -6,7 +6,7 @@ android {
 
     defaultConfig {
         applicationId "ru.firsto.intermusic"
-        minSdkVersion 8
+        minSdkVersion 9
         targetSdkVersion 22
         versionCode 1
         versionName "1.0"
@@ -22,4 +22,5 @@ android {
 dependencies {
     compile fileTree(dir: 'libs', include: ['*.jar'])
     compile 'com.android.support:appcompat-v7:22.2.1'
+    compile project(':vk-android-sdk:vksdk_library')
 }
