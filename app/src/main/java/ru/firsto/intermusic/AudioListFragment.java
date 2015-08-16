@@ -1,20 +1,15 @@
 package ru.firsto.intermusic;
 
-import android.content.Context;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
 import android.widget.ListView;
-import android.widget.Toast;
 
 import com.vk.sdk.api.model.VKApiAudio;
 
-import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -24,6 +19,7 @@ public class AudioListFragment extends Fragment {
 
     ListView mListAudio;
     List<VKApiAudio> mAudioList;
+    AudioPlayer mAudioPlayer;
 
     public static final String TAG = "audiolist";
 
@@ -33,6 +29,14 @@ public class AudioListFragment extends Fragment {
         if (getActivity() instanceof IAudioList) {
             mAudioList = ((IAudioList) getActivity()).getList();
         }
+
+        mAudioPlayer = new AudioPlayer();
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        releasePlayer();
     }
 
     @Nullable
@@ -42,36 +46,24 @@ public class AudioListFragment extends Fragment {
         View view = inflater.inflate(R.layout.fragment_list, container, false);
 
         mListAudio = (ListView) view.findViewById(R.id.listAudio);
-//        ArrayAdapter adapter = new ArrayAdapter<String>();
-        ArrayList<String> songs = new ArrayList<>();
-        for (VKApiAudio audio : mAudioList) {
-            songs.add(audio.title);
-        }
 
-        ArrayAdapter<String> adapter = new ArrayAdapter<String>(getActivity(),
-                android.R.layout.simple_list_item_1, songs);
+        AudioListAdapter adapter = new AudioListAdapter(getActivity(), mAudioList, mAudioPlayer);
         mListAudio.setAdapter(adapter);
-        adapter.notifyDataSetChanged();
-
-        mListAudio.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                Toast.makeText(getActivity(), "song: " + mAudioList.get(position).title + "\nurl: " + mAudioList.get(position).url, Toast.LENGTH_SHORT).show();
-
-            }
-        });
 
         return view;
     }
 
-    public interface IAudioList {
-        public List<VKApiAudio> getList();
+    private void releasePlayer() {
+        if (mAudioPlayer.isExist()) {
+            try {
+                mAudioPlayer.stop();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
     }
 
-    public class AudioListAdapter extends ArrayAdapter<String> {
-
-        public AudioListAdapter(Context context, int resource) {
-            super(context, resource);
-        }
+    public interface IAudioList {
+        List<VKApiAudio> getList();
     }
 }
