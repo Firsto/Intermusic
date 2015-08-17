@@ -87,18 +87,14 @@ public class AudioListAdapter extends ArrayAdapter<VKApiAudio> {
                 mAudioPlayer.setListener(bufferingListener);
             }
 
-            if (interrupted) {
-                Log.d("TAG", "interrupted " + interrupted + " -- played " + played + " -- isPlaying " + mAudioPlayer.isPlaying());
-                if (mAudioPlayer.isPlaying()) {
-                    mAudioPlayer.pause();
-                    played = true;
-                    interrupted = false;
-                }
-                notifyDataSetChanged();
-            }
-
             viewHolder.mProgressBar.setMax(song.duration);
+//            if (!mAudioPlayer.isPlaying() && !played) {
+//                Log.d("TAG", "init progress bar");
+//                viewHolder.mProgressBar.setProgress(0);
+//                viewHolder.mProgressBar.setSecondaryProgress(0);
+//            }
 
+            interruptUpdater();
             progressUpdater(viewHolder);
 
             viewHolder.mProgressBar.setTag(viewHolder.mRemaining);
@@ -122,8 +118,9 @@ public class AudioListAdapter extends ArrayAdapter<VKApiAudio> {
                 public void onStopTrackingTouch(SeekBar seekBar) {
                 }
             });
+
             viewHolder.mPlayButton.setImageDrawable(mContext.getResources().getDrawable(android.R.drawable.ic_media_pause));
-            if (!mAudioPlayer.isPlaying() && interrupted) viewHolder.mPlayButton.setImageDrawable(mContext.getResources().getDrawable(android.R.drawable.ic_media_play));
+            if (interrupted) viewHolder.mPlayButton.setImageDrawable(mContext.getResources().getDrawable(android.R.drawable.ic_media_play));
             viewHolder.mProgressBar.setVisibility(View.VISIBLE);
             viewHolder.mRemaining.setText("-" + getDurationString(song.duration));
             viewHolder.mRemaining.setVisibility(View.VISIBLE);
@@ -159,6 +156,7 @@ public class AudioListAdapter extends ArrayAdapter<VKApiAudio> {
                 } else {
                     played = false;
                     playingId = position;
+                    bufferedProgress = 0;
                     notifyDataSetChanged();
                 }
             }
@@ -203,11 +201,33 @@ public class AudioListAdapter extends ArrayAdapter<VKApiAudio> {
         }
     };
 
-    public void progressUpdater(final AudioViewHolder currentHolder) {
+    private void interruptUpdater() {
+        Log.d("TAG", "interrupted " + interrupted + " -- played " + played + " -- isPlaying " + mAudioPlayer.isPlaying());
+        if (interrupted) {
+            if (mAudioPlayer.isPlaying()) {
+                mAudioPlayer.pause();
+                played = true;
+                interrupted = false;
+            } else {
+                Runnable notification = new Runnable() {
+                    public void run() {
+                        interruptUpdater();
+                    }
+                };
+                handler.postDelayed(notification, 1000);
+            }
+        }
+    }
+
+    private void progressUpdater(final AudioViewHolder currentHolder) {
 
         if (mAudioPlayer.isExist() && playingId != nextId) {
             if (mAudioPlayer.isPlaying()) {
                 currentHolder.mProgressBar.setProgress(mAudioPlayer.getPosition() / 1000);
+            } else if (!played) {
+                Log.d("TAG", "init progress bar / buffered " + bufferedProgress);
+                currentHolder.mProgressBar.setProgress(0);
+                currentHolder.mProgressBar.setSecondaryProgress(0);
             }
             currentHolder.mProgressBar.setSecondaryProgress(bufferedProgress * currentHolder.mProgressBar.getMax() / 100);
 
@@ -222,12 +242,15 @@ public class AudioListAdapter extends ArrayAdapter<VKApiAudio> {
 //            mAudioPlayer.pause();
             if (playingId < mAudioList.size() && playingId > -1) {
                 Log.d("TAG", "INCREASING ID " + playingId + " // nextId = " + nextId);
-                currentHolder.mProgressBar.setProgress(0);
-                currentHolder.mProgressBar.setSecondaryProgress(0);
+                Log.d("TAG", "progress " + currentHolder.mProgressBar.getProgress() + " // secondary " + currentHolder.mProgressBar.getSecondaryProgress());
+//                currentHolder.mProgressBar.setProgress(0);
+//                currentHolder.mProgressBar.setSecondaryProgress(0);
                 playingId = nextId;
             } else {
                 playingId = -1;
             }
+            played = false;
+            bufferedProgress = 0;
             notifyDataSetChanged();
         }
     }
