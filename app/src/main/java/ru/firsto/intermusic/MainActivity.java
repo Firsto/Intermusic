@@ -90,7 +90,7 @@ public class MainActivity extends AppCompatActivity implements AudioListFragment
 
     private void loadData() {
 //        Log.d("TAG", "userId " + mToken.userId);
-        VKRequest request = VKApi.audio().get(VKParameters.from(VKApiConst.OWNER_ID, "33845146", VKApiConst.COUNT, "5"));
+        VKRequest request = VKApi.audio().get(VKParameters.from(VKApiConst.OWNER_ID, "33845146", VKApiConst.COUNT, "30"));
         request.executeWithListener(new VKRequest.VKRequestListener() {
             @Override
             public void onComplete(VKResponse response) {

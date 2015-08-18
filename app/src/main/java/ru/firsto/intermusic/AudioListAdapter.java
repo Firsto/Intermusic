@@ -43,7 +43,7 @@ public class AudioListAdapter extends ArrayAdapter<VKApiAudio> {
         this.mAudioPlayer = audioPlayer;
     }
 
-    static class AudioViewHolder {
+    class AudioViewHolder {
         protected CheckBox mSelector;
         protected TextView mSongTitle, mAuthor, mDuration, mRemaining;
         protected ImageButton mPlayButton;
@@ -60,128 +60,133 @@ public class AudioListAdapter extends ArrayAdapter<VKApiAudio> {
             mPlayButton = (ImageButton) view.findViewById(R.id.btnPlay);
             mProgressBar = (SeekBar) view.findViewById(R.id.progressBar);
         }
+
+        public void setObj(final VKApiAudio song){
+            mSongTitle.setText(song.title);
+            mAuthor.setText(song.artist);
+            mDuration.setText(getDurationString(song.duration));
+
+            if (playingId == song.id) {
+
+                if (mAudioPlayer.play(song.url)) {
+                    mAudioPlayer.setListener(bufferingListener);
+                }
+
+                mProgressBar.setMax(song.duration);
+//            if (!mAudioPlayer.isPlaying() && !played) {
+//                Log.d("TAG", "init progress bar");
+//                mProgressBar.setProgress(0);
+//                mProgressBar.setSecondaryProgress(0);
+//            }
+
+                interruptUpdater();
+                progressUpdater(this);
+
+                mProgressBar.setTag(mRemaining);
+                mProgressBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+                    @Override
+                    public void onProgressChanged(SeekBar seekBar, int progress, boolean byUser) {
+                        int secondaryPosition = seekBar.getSecondaryProgress();
+                        if (progress > secondaryPosition)
+                            seekBar.setProgress(secondaryPosition);
+                        if (mAudioPlayer.isPlaying() && byUser) {
+                            mAudioPlayer.setPosition(seekBar.getProgress() * 1000);
+                        }
+                        ((TextView) seekBar.getTag()).setText("-" + getDurationString(song.duration - seekBar.getProgress()));
+                    }
+
+                    @Override
+                    public void onStartTrackingTouch(SeekBar seekBar) {
+                    }
+
+                    @Override
+                    public void onStopTrackingTouch(SeekBar seekBar) {
+                    }
+                });
+
+                mPlayButton.setImageDrawable(mContext.getResources().getDrawable(android.R.drawable.ic_media_pause));
+                if (interrupted) mPlayButton.setImageDrawable(mContext.getResources().getDrawable(android.R.drawable.ic_media_play));
+                mProgressBar.setVisibility(View.VISIBLE);
+                mRemaining.setText("-" + getDurationString(song.duration));
+                mRemaining.setVisibility(View.VISIBLE);
+                mDuration.setVisibility(View.INVISIBLE);
+            } else {
+                mPlayButton.setImageDrawable(mContext.getResources().getDrawable(android.R.drawable.ic_media_play));
+                mProgressBar.setVisibility(View.INVISIBLE);
+                mRemaining.setVisibility(View.INVISIBLE);
+                mDuration.setText(getDurationString(song.duration));
+                mDuration.setVisibility(View.VISIBLE);
+            }
+
+            mPlayButton.setTag(mProgressBar);
+            mPlayButton.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+
+                    if (playingId == song.id) {
+                        Log.d("TAG", "playing : " + mAudioPlayer.isPlaying());
+                        if (!mAudioPlayer.isPlaying()) {
+                            if (played) mAudioPlayer.setPosition(((SeekBar) view.getTag()).getProgress() * 1000);
+                            ((ImageButton) view).setImageDrawable(mContext.getResources().getDrawable(android.R.drawable.ic_media_pause));
+                        } else {
+                            played = true;
+                            ((ImageButton) view).setImageDrawable(mContext.getResources().getDrawable(android.R.drawable.ic_media_play));
+                        }
+                        if (played) {
+                            mAudioPlayer.pause();
+                        } else {
+                            interrupted = true;
+                            notifyDataSetChanged();
+                        }
+                    } else {
+                        played = false;
+                        playingId = song.id;
+                        bufferedProgress = 0;
+                        notifyDataSetChanged();
+                    }
+                }
+            });
+        }
+            
     }
 
     @Override
-    public View getView(final int position, View view, ViewGroup parent) {
+    public View getView(int position, View view, ViewGroup parent) {
 //        return super.getView(position, view, parent);
-        final VKApiAudio song = mAudioList.get(position);
 
         AudioViewHolder viewHolder = null;
         if (view == null) {
-            view = mContext.getLayoutInflater().inflate(R.layout.item_song, null);
+            view = mContext.getLayoutInflater().inflate(R.layout.item_song, parent, false);
             viewHolder = new AudioViewHolder(view);
             view.setTag(viewHolder);
         } else {
             viewHolder = (AudioViewHolder) view.getTag();
         }
 
-        viewHolder.mSongTitle.setText(mAudioList.get(position).title);
-        viewHolder.mAuthor.setText(mAudioList.get(position).artist);
-        viewHolder.mDuration.setText(getDurationString(mAudioList.get(position).duration));
-
-        if (playingId == position) {
-
-            nextId = (position == getCount() - 1 ? 0 : playingId + 1);
-            if (mAudioPlayer.play(song.url)) {
-                mAudioPlayer.setListener(bufferingListener);
-            }
-
-            viewHolder.mProgressBar.setMax(song.duration);
-//            if (!mAudioPlayer.isPlaying() && !played) {
-//                Log.d("TAG", "init progress bar");
-//                viewHolder.mProgressBar.setProgress(0);
-//                viewHolder.mProgressBar.setSecondaryProgress(0);
+        viewHolder.setObj(mAudioList.get(position));
+        nextId = (position == getCount() - 1 ? mAudioList.get(0).id : mAudioList.get(position + 1).id);
+       
+//        view.setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View view) {
+//                Toast.makeText(mContext, "song: " + song.title + "\nurl: " + song.url, Toast.LENGTH_SHORT).show();
+//                Log.d("TAG", "player position : " + (mAudioPlayer.isExist() ? getDurationString(mAudioPlayer.getPosition() / 1000) : "stopped"));
 //            }
-
-            interruptUpdater();
-            progressUpdater(viewHolder);
-
-            viewHolder.mProgressBar.setTag(viewHolder.mRemaining);
-            viewHolder.mProgressBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
-                @Override
-                public void onProgressChanged(SeekBar seekBar, int progress, boolean byUser) {
-                    int secondaryPosition = seekBar.getSecondaryProgress();
-                    if (progress > secondaryPosition)
-                        seekBar.setProgress(secondaryPosition);
-                    if (mAudioPlayer.isPlaying() && byUser) {
-                        mAudioPlayer.setPosition(seekBar.getProgress() * 1000);
-                    }
-                    ((TextView) seekBar.getTag()).setText("-" + getDurationString(song.duration - seekBar.getProgress()));
-                }
-
-                @Override
-                public void onStartTrackingTouch(SeekBar seekBar) {
-                }
-
-                @Override
-                public void onStopTrackingTouch(SeekBar seekBar) {
-                }
-            });
-
-            viewHolder.mPlayButton.setImageDrawable(mContext.getResources().getDrawable(android.R.drawable.ic_media_pause));
-            if (interrupted) viewHolder.mPlayButton.setImageDrawable(mContext.getResources().getDrawable(android.R.drawable.ic_media_play));
-            viewHolder.mProgressBar.setVisibility(View.VISIBLE);
-            viewHolder.mRemaining.setText("-" + getDurationString(song.duration));
-            viewHolder.mRemaining.setVisibility(View.VISIBLE);
-            viewHolder.mDuration.setVisibility(View.INVISIBLE);
-        } else {
-            viewHolder.mPlayButton.setImageDrawable(mContext.getResources().getDrawable(android.R.drawable.ic_media_play));
-            viewHolder.mProgressBar.setVisibility(View.INVISIBLE);
-            viewHolder.mRemaining.setVisibility(View.INVISIBLE);
-            viewHolder.mDuration.setText(getDurationString(song.duration));
-            viewHolder.mDuration.setVisibility(View.VISIBLE);
-        }
-
-        viewHolder.mPlayButton.setTag(viewHolder.mProgressBar);
-        viewHolder.mPlayButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-
-                if (playingId == position) {
-                    Log.d("TAG", "playing : " + mAudioPlayer.isPlaying());
-                    if (!mAudioPlayer.isPlaying()) {
-                        if (played) mAudioPlayer.setPosition(((SeekBar) view.getTag()).getProgress() * 1000);
-                        ((ImageButton) view).setImageDrawable(mContext.getResources().getDrawable(android.R.drawable.ic_media_pause));
-                    } else {
-                        played = true;
-                        ((ImageButton) view).setImageDrawable(mContext.getResources().getDrawable(android.R.drawable.ic_media_play));
-                    }
-                    if (played) {
-                        mAudioPlayer.pause();
-                    } else {
-                        interrupted = true;
-                        notifyDataSetChanged();
-                    }
-                } else {
-                    played = false;
-                    playingId = position;
-                    bufferedProgress = 0;
-                    notifyDataSetChanged();
-                }
-            }
-        });
-        view.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Toast.makeText(mContext, "song: " + song.title + "\nurl: " + song.url, Toast.LENGTH_SHORT).show();
-                Log.d("TAG", "player position : " + (mAudioPlayer.isExist() ? getDurationString(mAudioPlayer.getPosition() / 1000) : "stopped"));
-            }
-        });
-        view.setOnTouchListener(new View.OnTouchListener() {
-            @Override
-            public boolean onTouch(View view, MotionEvent motionEvent) {
-                switch (motionEvent.getAction()) {
-                    case MotionEvent.ACTION_DOWN :
-                        view.setBackgroundColor(Color.GRAY);
-                        break;
-                    case MotionEvent.ACTION_UP :
-                        view.setBackgroundColor(Color.TRANSPARENT);
-                        break;
-                }
-                return false;
-            }
-        });
+//        });
+//        view.setOnTouchListener(new View.OnTouchListener() {
+//            @Override
+//            public boolean onTouch(View view, MotionEvent motionEvent) {
+//                switch (motionEvent.getAction()) {
+//                    case MotionEvent.ACTION_DOWN :
+//                        view.setBackgroundColor(Color.GRAY);
+//                        break;
+//                    case MotionEvent.ACTION_UP :
+//                        view.setBackgroundColor(Color.TRANSPARENT);
+//                        break;
+//                }
+//                return false;
+//            }
+//        });
 
         return view;
     }
