@@ -245,7 +245,7 @@ public class AudioListAdapter extends ArrayAdapter<VKApiAudio> {
         }
         else {
 //            mAudioPlayer.pause();
-            if (playingId < mAudioList.size() && playingId > -1) {
+            if (playingId != mAudioList.get(mAudioList.size() - 1).id && playingId > -1) {
                 Log.d("TAG", "INCREASING ID " + playingId + " // nextId = " + nextId);
                 Log.d("TAG", "progress " + currentHolder.mProgressBar.getProgress() + " // secondary " + currentHolder.mProgressBar.getSecondaryProgress());
 //                currentHolder.mProgressBar.setProgress(0);
