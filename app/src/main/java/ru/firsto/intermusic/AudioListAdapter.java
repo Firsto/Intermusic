@@ -1,11 +1,9 @@
 package ru.firsto.intermusic;
 
 import android.app.Activity;
-import android.graphics.Color;
 import android.media.MediaPlayer;
 import android.os.Handler;
 import android.util.Log;
-import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
@@ -13,7 +11,6 @@ import android.widget.CheckBox;
 import android.widget.ImageButton;
 import android.widget.SeekBar;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.vk.sdk.api.model.VKApiAudio;
 
@@ -67,6 +64,9 @@ public class AudioListAdapter extends ArrayAdapter<VKApiAudio> {
             mDuration.setText(getDurationString(song.duration));
 
             if (playingId == song.id) {
+
+                int position = mAudioList.indexOf(song);
+                nextId = (position == getCount() - 1 ? mAudioList.get(0).id : mAudioList.get(position + 1).id);
 
                 if (mAudioPlayer.play(song.url)) {
                     mAudioPlayer.setListener(bufferingListener);
@@ -164,8 +164,7 @@ public class AudioListAdapter extends ArrayAdapter<VKApiAudio> {
         }
 
         viewHolder.setObj(mAudioList.get(position));
-        nextId = (position == getCount() - 1 ? mAudioList.get(0).id : mAudioList.get(position + 1).id);
-       
+
 //        view.setOnClickListener(new View.OnClickListener() {
 //            @Override
 //            public void onClick(View view) {
