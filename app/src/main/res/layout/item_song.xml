@@ -39,8 +39,7 @@
         android:text="Author"
         android:id="@+id/tvAuthor"
         android:layout_toRightOf="@id/btnPlay"
-        android:layout_below="@id/tvSongTitle"
-        android:paddingTop="0dp"/>
+        android:layout_below="@id/tvSongTitle"/>
 
     <TextView
         android:layout_width="wrap_content"

@@ -3,10 +3,11 @@ package ru.firsto.intermusic;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ListView;
 
 import com.vk.sdk.api.model.VKApiAudio;
 
@@ -17,11 +18,14 @@ import java.util.List;
  */
 public class AudioListFragment extends Fragment {
 
-    ListView mListAudio;
-    List<VKApiAudio> mAudioList;
-    AudioPlayer mAudioPlayer;
-
     public static final String TAG = "audiolist";
+
+    private List<VKApiAudio> mAudioList;
+    private AudioPlayer mAudioPlayer;
+
+    private RecyclerView mListAudio;
+    private AudioListAdapter mAdapter;
+    private LinearLayoutManager mLayoutManager;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -43,12 +47,16 @@ public class AudioListFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
 //        return super.onCreateView(inflater, container, savedInstanceState);
-        View view = inflater.inflate(R.layout.fragment_list, container, false);
+        View view = inflater.inflate(R.layout.list_song, container, false);
 
-        mListAudio = (ListView) view.findViewById(R.id.listAudio);
+        mListAudio = (RecyclerView) view.findViewById(R.id.listSong);
+        mListAudio.setHasFixedSize(true);
 
-        AudioListAdapter adapter = new AudioListAdapter(getActivity(), mAudioList, mAudioPlayer);
-        mListAudio.setAdapter(adapter);
+        mLayoutManager = new LinearLayoutManager(getActivity());
+        mListAudio.setLayoutManager(mLayoutManager);
+
+        mAdapter = new AudioListAdapter(getActivity(), mAudioList, mAudioPlayer);
+        mListAudio.setAdapter(mAdapter);
 
         return view;
     }

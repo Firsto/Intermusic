@@ -3,10 +3,11 @@ package ru.firsto.intermusic;
 import android.app.Activity;
 import android.media.MediaPlayer;
 import android.os.Handler;
+import android.support.v7.widget.RecyclerView;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ArrayAdapter;
 import android.widget.CheckBox;
 import android.widget.ImageButton;
 import android.widget.SeekBar;
@@ -19,7 +20,7 @@ import java.util.List;
 /**
  * Created by razor on 15.08.15.
  **/
-public class AudioListAdapter extends ArrayAdapter<VKApiAudio> {
+public class AudioListAdapter extends RecyclerView.Adapter<AudioListAdapter.AudioViewHolder> {
 
     private List<VKApiAudio> mAudioList;
     private Activity mContext;
@@ -34,21 +35,36 @@ public class AudioListAdapter extends ArrayAdapter<VKApiAudio> {
     private boolean interrupted = false;
 
     public AudioListAdapter(Activity context, List<VKApiAudio> audioList, AudioPlayer audioPlayer) {
-        super(context, R.layout.item_song, audioList);
         this.mAudioList = audioList;
         this.mContext = context;
         this.mAudioPlayer = audioPlayer;
     }
 
-    class AudioViewHolder {
+    @Override
+    public AudioViewHolder onCreateViewHolder(ViewGroup viewGroup, int i) {
+        View v = LayoutInflater.from(viewGroup.getContext()).inflate(R.layout.item_song, viewGroup, false);
+
+        return new AudioViewHolder(v);
+    }
+
+    @Override
+    public void onBindViewHolder(AudioViewHolder viewHolder, int i) {
+        viewHolder.setObj(mAudioList.get(i));
+    }
+
+    @Override
+    public int getItemCount() {
+        return mAudioList.size();
+    }
+
+    class AudioViewHolder extends RecyclerView.ViewHolder {
         protected CheckBox mSelector;
         protected TextView mSongTitle, mAuthor, mDuration, mRemaining;
         protected ImageButton mPlayButton;
         protected SeekBar mProgressBar;
-        private View mView;
 
         public AudioViewHolder(View view) {
-            mView = view;
+            super(view);
             mSongTitle = (TextView) view.findViewById(R.id.tvSongTitle);
             mAuthor = (TextView) view.findViewById(R.id.tvAuthor);
             mDuration = (TextView) view.findViewById(R.id.tvDuration);
@@ -66,7 +82,7 @@ public class AudioListAdapter extends ArrayAdapter<VKApiAudio> {
             if (playingId == song.id) {
 
                 int position = mAudioList.indexOf(song);
-                nextId = (position == getCount() - 1 ? mAudioList.get(0).id : mAudioList.get(position + 1).id);
+                nextId = (position == getItemCount() - 1 ? mAudioList.get(0).id : mAudioList.get(position + 1).id);
 
                 if (mAudioPlayer.play(song.url)) {
                     mAudioPlayer.setListener(bufferingListener);
@@ -148,46 +164,6 @@ public class AudioListAdapter extends ArrayAdapter<VKApiAudio> {
             });
         }
             
-    }
-
-    @Override
-    public View getView(int position, View view, ViewGroup parent) {
-//        return super.getView(position, view, parent);
-
-        AudioViewHolder viewHolder = null;
-        if (view == null) {
-            view = mContext.getLayoutInflater().inflate(R.layout.item_song, parent, false);
-            viewHolder = new AudioViewHolder(view);
-            view.setTag(viewHolder);
-        } else {
-            viewHolder = (AudioViewHolder) view.getTag();
-        }
-
-        viewHolder.setObj(mAudioList.get(position));
-
-//        view.setOnClickListener(new View.OnClickListener() {
-//            @Override
-//            public void onClick(View view) {
-//                Toast.makeText(mContext, "song: " + song.title + "\nurl: " + song.url, Toast.LENGTH_SHORT).show();
-//                Log.d("TAG", "player position : " + (mAudioPlayer.isExist() ? getDurationString(mAudioPlayer.getPosition() / 1000) : "stopped"));
-//            }
-//        });
-//        view.setOnTouchListener(new View.OnTouchListener() {
-//            @Override
-//            public boolean onTouch(View view, MotionEvent motionEvent) {
-//                switch (motionEvent.getAction()) {
-//                    case MotionEvent.ACTION_DOWN :
-//                        view.setBackgroundColor(Color.GRAY);
-//                        break;
-//                    case MotionEvent.ACTION_UP :
-//                        view.setBackgroundColor(Color.TRANSPARENT);
-//                        break;
-//                }
-//                return false;
-//            }
-//        });
-
-        return view;
     }
 
     private String getDurationString(int duration) {
