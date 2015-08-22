@@ -1,11 +1,13 @@
 package ru.firsto.intermusic;
 
 import android.app.Activity;
+import android.graphics.Color;
 import android.media.MediaPlayer;
 import android.os.Handler;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.CheckBox;
@@ -62,9 +64,11 @@ public class AudioListAdapter extends RecyclerView.Adapter<AudioListAdapter.Audi
         protected TextView mSongTitle, mAuthor, mDuration, mRemaining;
         protected ImageButton mPlayButton;
         protected SeekBar mProgressBar;
+        protected View mView;
 
         public AudioViewHolder(View view) {
             super(view);
+            mView = view;
             mSongTitle = (TextView) view.findViewById(R.id.tvSongTitle);
             mAuthor = (TextView) view.findViewById(R.id.tvAuthor);
             mDuration = (TextView) view.findViewById(R.id.tvDuration);
@@ -142,7 +146,8 @@ public class AudioListAdapter extends RecyclerView.Adapter<AudioListAdapter.Audi
                     if (playingId == song.id) {
                         Log.d("TAG", "playing : " + mAudioPlayer.isPlaying());
                         if (!mAudioPlayer.isPlaying()) {
-                            if (played) mAudioPlayer.setPosition(((SeekBar) view.getTag()).getProgress() * 1000);
+                            if (played)
+                                mAudioPlayer.setPosition(((SeekBar) view.getTag()).getProgress() * 1000);
                             ((ImageButton) view).setImageDrawable(mContext.getResources().getDrawable(android.R.drawable.ic_media_pause));
                         } else {
                             played = true;
@@ -160,6 +165,21 @@ public class AudioListAdapter extends RecyclerView.Adapter<AudioListAdapter.Audi
                         bufferedProgress = 0;
                         notifyDataSetChanged();
                     }
+                }
+            });
+
+            mView.setOnTouchListener(new View.OnTouchListener() {
+                @Override
+                public boolean onTouch(View view, MotionEvent motionEvent) {
+                    switch (motionEvent.getAction()) {
+                        case MotionEvent.ACTION_DOWN:
+                            view.setBackgroundColor(Color.parseColor("#88FFFFFF"));
+                            break;
+                        default:
+                            view.setBackgroundColor(Color.TRANSPARENT);
+                            break;
+                    }
+                    return true;
                 }
             });
         }
