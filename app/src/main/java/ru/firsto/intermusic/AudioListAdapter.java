@@ -64,11 +64,9 @@ public class AudioListAdapter extends RecyclerView.Adapter<AudioListAdapter.Audi
         protected TextView mSongTitle, mAuthor, mDuration, mRemaining;
         protected ImageButton mPlayButton;
         protected SeekBar mProgressBar;
-        protected View mView;
 
         public AudioViewHolder(View view) {
             super(view);
-            mView = view;
             mSongTitle = (TextView) view.findViewById(R.id.tvSongTitle);
             mAuthor = (TextView) view.findViewById(R.id.tvAuthor);
             mDuration = (TextView) view.findViewById(R.id.tvDuration);
@@ -168,7 +166,7 @@ public class AudioListAdapter extends RecyclerView.Adapter<AudioListAdapter.Audi
                 }
             });
 
-            mView.setOnTouchListener(new View.OnTouchListener() {
+            super.itemView.setOnTouchListener(new View.OnTouchListener() {
                 @Override
                 public boolean onTouch(View view, MotionEvent motionEvent) {
                     switch (motionEvent.getAction()) {
