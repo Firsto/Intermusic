@@ -85,7 +85,6 @@ public class MainActivity extends AppCompatActivity implements AudioListFragment
             }
         });
 
-
     }
 
     private void loadData() {
@@ -182,6 +181,10 @@ public class MainActivity extends AppCompatActivity implements AudioListFragment
 
         //noinspection SimplifiableIfStatement
         if (id == R.id.action_settings) {
+            return true;
+        }
+        if (id == R.id.action_save) {
+            Log.d("menu", "save");
             return true;
         }
 

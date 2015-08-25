@@ -62,7 +62,7 @@ public class AudioListAdapter extends RecyclerView.Adapter<AudioListAdapter.Audi
     class AudioViewHolder extends RecyclerView.ViewHolder {
         protected CheckBox mSelector;
         protected TextView mSongTitle, mAuthor, mDuration, mRemaining;
-        protected ImageButton mPlayButton;
+        protected ImageButton mPlayButton, mSaveButton;
         protected SeekBar mProgressBar;
 
         public AudioViewHolder(View view) {
@@ -73,6 +73,7 @@ public class AudioListAdapter extends RecyclerView.Adapter<AudioListAdapter.Audi
             mRemaining = (TextView) view.findViewById(R.id.tvRemaining);
             mSelector = (CheckBox) view.findViewById(R.id.chbSelector);
             mPlayButton = (ImageButton) view.findViewById(R.id.btnPlay);
+            mSaveButton = (ImageButton) view.findViewById(R.id.btnSave);
             mProgressBar = (SeekBar) view.findViewById(R.id.progressBar);
         }
 
@@ -163,6 +164,15 @@ public class AudioListAdapter extends RecyclerView.Adapter<AudioListAdapter.Audi
                         bufferedProgress = 0;
                         notifyDataSetChanged();
                     }
+                }
+            });
+
+            mSaveButton.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    Log.d("TAG", "song.id = " + song.id
+                            + "\n" + song.artist + " - " + song.title
+                    );
                 }
             });
 
