@@ -1,6 +1,7 @@
 package ru.firsto.intermusic;
 
 import android.app.Activity;
+import android.content.Intent;
 import android.graphics.Color;
 import android.media.MediaPlayer;
 import android.os.Handler;
@@ -172,6 +173,14 @@ public class AudioListAdapter extends RecyclerView.Adapter<AudioListAdapter.Audi
                 public void onClick(View v) {
                     Log.d("TAG", "song.id = " + song.id
                             + "\n" + song.artist + " - " + song.title
+                    );
+
+                    Intent i = new Intent(mContext, Downloader.class);
+                    mContext.startService(i
+                            .putExtra("id",song.id)
+                            .putExtra("artist", song.artist)
+                            .putExtra("title", song.title)
+                            .putExtra("url", song.url)
                     );
                 }
             });

@@ -1,12 +1,21 @@
 package ru.firsto.intermusic;
 
+import android.app.Notification;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.SharedPreferences;
+import android.content.res.Resources;
+import android.graphics.BitmapFactory;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.app.NotificationCompat;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -85,6 +94,13 @@ public class MainActivity extends AppCompatActivity implements AudioListFragment
             }
         });
 
+        registerReceiver(receiver, new IntentFilter(Downloader.ACTION));
+    }
+
+    @Override
+    protected void onStop() {
+        unregisterReceiver(receiver);
+        super.onStop();
     }
 
     private void loadData() {
@@ -209,4 +225,41 @@ public class MainActivity extends AppCompatActivity implements AudioListFragment
     public List<VKApiAudio> getList() {
         return mAudioList;
     }
+
+    private static final int NOTIFY_ID = 1;
+    private BroadcastReceiver receiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            Log.d("TAG", "download complete " + intent.getIntExtra("id", 0));
+
+            Intent notificationIntent = new Intent(context, MainActivity.class);
+
+            PendingIntent contentIntent = PendingIntent.getActivity(context,
+                    0, notificationIntent,
+                    PendingIntent.FLAG_CANCEL_CURRENT);
+
+            Resources res = context.getResources();
+            NotificationCompat.Builder builder = new NotificationCompat.Builder(context);
+
+            builder.setContentIntent(contentIntent)
+                    .setSmallIcon(android.R.drawable.ic_menu_save)
+                            // большая картинка
+                    .setLargeIcon(BitmapFactory.decodeResource(res, android.R.drawable.ic_menu_save))
+                            //.setTicker(res.getString(R.string.warning)) // текст в строке состояния
+                    .setTicker("Скачивание завершено!")
+                    .setWhen(System.currentTimeMillis())
+                    .setAutoCancel(true)
+                            //.setContentTitle(res.getString(R.string.notifytitle)) // Заголовок уведомления
+                    .setContentTitle("Скачивание завершено")
+                            //.setContentText(res.getString(R.string.notifytext))
+                    .setContentText("Скачивание завершено"); // Текст уведомления
+
+            // Notification notification = builder.getNotification(); // до API 16
+            Notification notification = builder.build();
+
+            NotificationManager notificationManager = (NotificationManager) context
+                    .getSystemService(Context.NOTIFICATION_SERVICE);
+            notificationManager.notify(NOTIFY_ID, notification);
+        }
+    };
 }
