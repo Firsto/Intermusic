@@ -175,12 +175,13 @@ public class AudioListAdapter extends RecyclerView.Adapter<AudioListAdapter.Audi
                             + "\n" + song.artist + " - " + song.title
                     );
 
-                    Intent i = new Intent(mContext, Downloader.class);
+                    Intent i = new Intent(mContext, DownloadService.class);
                     mContext.startService(i
                             .putExtra("id",song.id)
                             .putExtra("artist", song.artist)
                             .putExtra("title", song.title)
                             .putExtra("url", song.url)
+                            .putExtra("receiver", new DownloadReceiver(new Handler(), mContext))
                     );
                 }
             });
