@@ -19,9 +19,10 @@ import java.net.URLConnection;
  */
 public class DownloadService extends IntentService {
     public static final String ACTION = DownloadService.class.getSimpleName() + ".broadcast";
+    public static final int UPDATE_PROGRESS = 1111;
+    public static volatile boolean stopped = false;
 
     private static final int MAX_BUFFER_SIZE = 1024;
-    public static final int UPDATE_PROGRESS = 1111;
 
     public DownloadService() {
         super("DownloadService");
@@ -73,6 +74,7 @@ public class DownloadService extends IntentService {
             int progressBuffer = 0;
             int count;
             while ((count = in.read(data, 0, MAX_BUFFER_SIZE)) != -1) {
+                if (stopped) break;
                 total += count;
                 progressBuffer += count;
 
@@ -95,6 +97,7 @@ public class DownloadService extends IntentService {
             if (fout != null) {
                 fout.close();
             }
+            stopped = false;
         }
     }
 

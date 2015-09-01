@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.content.Intent;
 import android.graphics.Color;
 import android.media.MediaPlayer;
+import android.os.Environment;
 import android.os.Handler;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
@@ -18,6 +19,7 @@ import android.widget.TextView;
 
 import com.vk.sdk.api.model.VKApiAudio;
 
+import java.io.File;
 import java.util.List;
 
 /**
@@ -138,6 +140,13 @@ public class AudioListAdapter extends RecyclerView.Adapter<AudioListAdapter.Audi
                 mDuration.setVisibility(View.VISIBLE);
             }
 
+            File file = new File(Environment.getExternalStorageDirectory().getPath() + "/Download/" + song.artist + " - " + song.title + ".mp3");
+            if (file.exists()) {
+                mSaveButton.setVisibility(View.INVISIBLE);
+            } else {
+                mSaveButton.setVisibility(View.VISIBLE);
+            }
+
             mPlayButton.setTag(mProgressBar);
             mPlayButton.setOnClickListener(new View.OnClickListener() {
                 @Override
@@ -177,11 +186,11 @@ public class AudioListAdapter extends RecyclerView.Adapter<AudioListAdapter.Audi
 
                     Intent i = new Intent(mContext, DownloadService.class);
                     mContext.startService(i
-                            .putExtra("id",song.id)
-                            .putExtra("artist", song.artist)
-                            .putExtra("title", song.title)
-                            .putExtra("url", song.url)
-                            .putExtra("receiver", new DownloadReceiver(new Handler(), mContext))
+                                    .putExtra("id", song.id)
+                                    .putExtra("artist", song.artist)
+                                    .putExtra("title", song.title)
+                                    .putExtra("url", song.url)
+                                    .putExtra("receiver", new DownloadReceiver(new Handler(), mContext))
                     );
                 }
             });

@@ -2,7 +2,9 @@ package ru.firsto.intermusic;
 
 import android.app.Notification;
 import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.content.Context;
+import android.content.Intent;
 import android.content.res.Resources;
 import android.graphics.BitmapFactory;
 import android.os.Bundle;
@@ -15,16 +17,25 @@ import android.util.Log;
  * Created by razor on 31.08.15.
  */
 public class DownloadReceiver extends ResultReceiver {
+    public static final String ACTION = DownloadReceiver.class.getSimpleName() + ".broadcast";
 
-    private NotificationCompat.Builder builder;
+    private static final int NOTIFY_ID = 2;
+
     private Context mContext;
+    private NotificationCompat.Builder builder;
+    private NotificationManager notificationManager;
+    private Notification notification;
+
+    private Intent cancelIntent;
+    private PendingIntent cancelPendingIntent;
 
     public DownloadReceiver(Handler handler, Context context) {
         super(handler);
         mContext = context;
+        notificationManager = (NotificationManager) mContext.getSystemService(Context.NOTIFICATION_SERVICE);
 
         Resources res = context.getResources();
-        builder = new NotificationCompat.Builder(context);
+        builder = new NotificationCompat.Builder(mContext);
 
         builder.setSmallIcon(android.R.drawable.ic_menu_save)
                 // большая картинка
@@ -38,6 +49,12 @@ public class DownloadReceiver extends ResultReceiver {
                         //.setContentText(res.getString(R.string.notifytext))
                 .setContentText("Скачивание файла"); // Текст уведомления
 
+        //Create an Intent for the BroadcastReceiver
+        cancelIntent = new Intent(ACTION);
+        cancelIntent.putExtra("notificationId", NOTIFY_ID);
+        cancelPendingIntent = PendingIntent.getBroadcast(mContext, 0, cancelIntent, 0);
+
+        builder.addAction(android.R.drawable.ic_menu_close_clear_cancel, "Dismiss", cancelPendingIntent);
     }
 
     @Override
@@ -48,18 +65,18 @@ public class DownloadReceiver extends ResultReceiver {
 
             Log.d("TAG", "onRecieveResult progress = " + progress);
 
-            builder.setProgress(100, progress, false);
+            if (progress < 3) {
+                builder.setProgress(0, 0, true);
+            } else {
+                builder.setProgress(100, progress, false);
+            }
 
-            Notification notification = builder.build();
+            notification = builder.build();
 
-            NotificationManager notificationManager = (NotificationManager) mContext
-                    .getSystemService(Context.NOTIFICATION_SERVICE);
-            notificationManager.notify(2, notification);
-//                mProgressDialog.setProgress(progress);
+            notificationManager.notify(NOTIFY_ID, notification);
             if (progress == 100) {
                 Log.d("TAG", "progress 100");
-                notificationManager.cancel(2);
-//                    mProgressDialog.dismiss();
+                notificationManager.cancel(NOTIFY_ID);
             }
         }
     }

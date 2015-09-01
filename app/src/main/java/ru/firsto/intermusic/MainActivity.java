@@ -94,12 +94,14 @@ public class MainActivity extends AppCompatActivity implements AudioListFragment
             }
         });
 
-        registerReceiver(receiver, new IntentFilter(DownloadService.ACTION));
+        registerReceiver(completeReceiver, new IntentFilter(DownloadService.ACTION));
+        registerReceiver(stopReceiver, new IntentFilter(DownloadReceiver.ACTION));
     }
 
     @Override
     protected void onStop() {
-        unregisterReceiver(receiver);
+        unregisterReceiver(completeReceiver);
+        unregisterReceiver(stopReceiver);
         super.onStop();
     }
 
@@ -227,7 +229,7 @@ public class MainActivity extends AppCompatActivity implements AudioListFragment
     }
 
     private static final int NOTIFY_ID = 1;
-    private BroadcastReceiver receiver = new BroadcastReceiver() {
+    private BroadcastReceiver completeReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
             Log.d("TAG", "download complete " + intent.getIntExtra("id", 0));
@@ -263,50 +265,18 @@ public class MainActivity extends AppCompatActivity implements AudioListFragment
         }
     };
 
-//    private class DownloadReceiver extends ResultReceiver {
-//
-//        private NotificationCompat.Builder builder;
-//        private Context mContext;
-//
-//        public DownloadReceiver(Handler handler, Context context) {
-//            super(handler);
-//            mContext = context;
-//
-//            Resources res = context.getResources();
-//            builder = new NotificationCompat.Builder(context);
-//
-//            builder.setSmallIcon(android.R.drawable.ic_menu_save)
-//                            // большая картинка
-//                    .setLargeIcon(BitmapFactory.decodeResource(res, android.R.drawable.ic_menu_save))
-//                            //.setTicker(res.getString(R.string.warning)) // текст в строке состояния
-//                    .setTicker("Скачивание файла!")
-//                    .setWhen(System.currentTimeMillis())
-//                    .setAutoCancel(true)
-//                            //.setContentTitle(res.getString(R.string.notifytitle)) // Заголовок уведомления
-//                    .setContentTitle("Скачивание файла")
-//                            //.setContentText(res.getString(R.string.notifytext))
-//                    .setContentText("Скачивание файла"); // Текст уведомления
-//
-//        }
-//
-//        @Override
-//        protected void onReceiveResult(int resultCode, Bundle resultData) {
-//            super.onReceiveResult(resultCode, resultData);
-//            if (resultCode == DownloadService.UPDATE_PROGRESS) {
-//                int max = resultData.getInt("max");
-//                int progress = resultData.getInt("progress");
-//                builder.setProgress(max, progress, true);
-//
-//                Notification notification = builder.build();
-//
-//                NotificationManager notificationManager = (NotificationManager) mContext
-//                        .getSystemService(Context.NOTIFICATION_SERVICE);
-//                notificationManager.notify(2, notification);
-////                mProgressDialog.setProgress(progress);
-//                if (progress == 100) {
-////                    mProgressDialog.dismiss();
-//                }
-//            }
-//        }
-//    }
+    private BroadcastReceiver stopReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+
+            int notificationId = intent.getIntExtra("notificationId", 0);
+
+            Log.d("TAG", "Button Receiver onReceive");
+            DownloadService.stopped = true;
+
+            // cancel notification
+            NotificationManager manager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
+            manager.cancel(notificationId);
+        }
+    };
 }
