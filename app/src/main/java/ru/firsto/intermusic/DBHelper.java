@@ -13,8 +13,6 @@ import android.database.sqlite.SQLiteOpenHelper;
 import android.os.Parcel;
 import android.util.Log;
 
-import com.vk.sdk.api.model.VKApiAudio;
-
 public class DBHelper extends SQLiteOpenHelper {
     public static final String TAG = "DatabaseHelper";
 
@@ -33,6 +31,7 @@ public class DBHelper extends SQLiteOpenHelper {
     private static final String COLUMN_SONG_GENRE       = "genre_id";
     private static final String COLUMN_SONG_ACCESS_KEY  = "access_key";
 
+    private static final String COLUMN_SONG_POSITION  = "position";
     private static final String COLUMN_SONG_DOWNLOADED  = "downloaded";
     private static final String COLUMN_SONG_PATH  = "path";
 
@@ -44,7 +43,7 @@ public class DBHelper extends SQLiteOpenHelper {
     @Override
     public void onCreate(SQLiteDatabase db) {
         // Создание таблицы "songs"
-        db.execSQL("CREATE TABLE " + TABLE_SONGS +" (" +
+        db.execSQL("CREATE TABLE " + TABLE_SONGS + " (" +
 //                        "_id integer primary key autoincrement," +
                         COLUMN_SONG_ID + " INTEGER PRIMARY KEY, " +
                         COLUMN_SONG_OWNER_ID + " INTEGER, " +
@@ -56,6 +55,7 @@ public class DBHelper extends SQLiteOpenHelper {
                         COLUMN_SONG_ALBUM_ID + " INTEGER, " +
                         COLUMN_SONG_GENRE + " INTEGER, " +
                         COLUMN_SONG_ACCESS_KEY + " VARCHAR(255), " +
+                        COLUMN_SONG_POSITION + " INTEGER, " +
                         COLUMN_SONG_DOWNLOADED + " TINYINT NOT NULL DEFAULT 0, " +
                         COLUMN_SONG_PATH + " VARCHAR(255) NOT NULL DEFAULT '', " +
                         ")"
@@ -82,23 +82,7 @@ public class DBHelper extends SQLiteOpenHelper {
         }
     }
 
-    public long insertSong(VKApiAudio song) {
-        ContentValues cv = new ContentValues();
-        cv.put(COLUMN_SONG_ID, song.id);
-        cv.put(COLUMN_SONG_OWNER_ID  , song.owner_id);
-        cv.put(COLUMN_SONG_ARTIST    , song.artist);
-        cv.put(COLUMN_SONG_TITLE     , song.title);
-        cv.put(COLUMN_SONG_DURATION  , song.duration);
-        cv.put(COLUMN_SONG_URL       , song.url);
-        cv.put(COLUMN_SONG_LYRICS_ID , song.lyrics_id);
-        cv.put(COLUMN_SONG_ALBUM_ID  , song.album_id);
-        cv.put(COLUMN_SONG_GENRE     , song.genre);
-        cv.put(COLUMN_SONG_ACCESS_KEY, song.access_key);
-
-        return getWritableDatabase().insert(TABLE_SONGS, null, cv);
-    }
-
-    public long updateSong(VKApiAudio song) {
+    private ContentValues getCV(Song song){
         ContentValues cv = new ContentValues();
 //        cv.put(COLUMN_SONG_ID, song.id);
         cv.put(COLUMN_SONG_OWNER_ID  , song.owner_id);
@@ -111,14 +95,35 @@ public class DBHelper extends SQLiteOpenHelper {
         cv.put(COLUMN_SONG_GENRE     , song.genre);
         cv.put(COLUMN_SONG_ACCESS_KEY, song.access_key);
 
-        return getWritableDatabase().update(TABLE_SONGS, cv, COLUMN_SONG_ID + " = ?", new String[]{String.valueOf(song.id)});
+        cv.put(COLUMN_SONG_POSITION, song.position);
+        cv.put(COLUMN_SONG_DOWNLOADED, song.downloaded);
+        cv.put(COLUMN_SONG_PATH, song.path);
+
+        return cv;
+    };
+
+    public long insertSong(Song song) {
+        ContentValues contentValues = getCV(song);
+        contentValues.put(COLUMN_SONG_ID, song.id);
+
+        return getWritableDatabase().insert(TABLE_SONGS, null, contentValues);
     }
 
-    public long setSongPath(int id, String path) {
-        ContentValues cv = new ContentValues();
+    public long updateSong(Song song) {
+        return getWritableDatabase().update(TABLE_SONGS, getCV(song), COLUMN_SONG_ID + " = ?", new String[]{String.valueOf(song.id)});
+    }
 
+    public long updateSongPath(int id, String path) {
+        ContentValues cv = new ContentValues();
         cv.put(COLUMN_SONG_DOWNLOADED, 1);
         cv.put(COLUMN_SONG_PATH, path);
+
+        return getWritableDatabase().update(TABLE_SONGS, cv, COLUMN_SONG_ID + " = ?", new String[]{ String.valueOf(id) } );
+    }
+
+    public long updateSongPosition(int id, int position) {
+        ContentValues cv = new ContentValues();
+        cv.put(COLUMN_SONG_POSITION, position);
 
         return getWritableDatabase().update(TABLE_SONGS, cv, COLUMN_SONG_ID + " = ?", new String[]{ String.valueOf(id) } );
     }
@@ -156,7 +161,7 @@ public class DBHelper extends SQLiteOpenHelper {
 
     /**
      * Вспомогательный класс с курсором, возвращающим строки таблицы "songs".
-     * Метод {@link getItem()} возвращает экземпляр VKApiAudio, представляющий
+     * Метод {@link getItem()} возвращает экземпляр Song, представляющий
      * текущую строку.
      */
 
@@ -166,10 +171,10 @@ public class DBHelper extends SQLiteOpenHelper {
         }
 
         /**
-         * Возвращает объект VKApiAudio, представляющий текущую строку,
+         * Возвращает объект Song, представляющий текущую строку,
          * или null, если текущая строка недействительна.
          */
-        public VKApiAudio getSong() {
+        public Song getSong() {
             if (isBeforeFirst() || isAfterLast())
                 return null;
 
@@ -185,7 +190,11 @@ public class DBHelper extends SQLiteOpenHelper {
             parcel.writeInt(getInt(getColumnIndex(COLUMN_SONG_GENRE)));
             parcel.writeString(getString(getColumnIndex(COLUMN_SONG_ACCESS_KEY)));
 
-            return VKApiAudio.CREATOR.createFromParcel(parcel);
+            parcel.writeInt(getInt(getColumnIndex(COLUMN_SONG_POSITION)));
+            parcel.writeInt(getInt(getColumnIndex(COLUMN_SONG_DOWNLOADED)));
+            parcel.writeString(getString(getColumnIndex(COLUMN_SONG_PATH)));
+
+            return Song.CREATOR.createFromParcel(parcel);
         }
     }
 }

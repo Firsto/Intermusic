@@ -48,6 +48,7 @@ public class MainActivity extends AppCompatActivity implements AudioListFragment
     private static final String PREF_FIRST_START = "first_start";
     private static final String PREF_TOKEN = "token";
 
+    private DBHelper mHelper;
     private SharedPreferences mPrefs;
 
     VKAccessToken mToken;
@@ -66,6 +67,7 @@ public class MainActivity extends AppCompatActivity implements AudioListFragment
         String[] fingerprints = VKUtil.getCertificateFingerprint(this, this.getPackageName());
         Log.d("TAG", fingerprints[0]);
 
+        mHelper = new DBHelper(getApplicationContext());
         mPrefs = PreferenceManager.getDefaultSharedPreferences(this);
         boolean isFirstStart = mPrefs.getBoolean(PREF_FIRST_START, true);
 
