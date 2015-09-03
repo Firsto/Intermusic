@@ -234,7 +234,7 @@ public class MainActivity extends AppCompatActivity implements AudioListFragment
     private BroadcastReceiver completeReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
-            Log.d("TAG", "download complete " + intent.getIntExtra("id", 0));
+            Log.d("TAG", "download complete " + intent.getIntExtra("id", 0) + " // path " + intent.getStringExtra("path"));
 
             Intent notificationIntent = new Intent(context, MainActivity.class);
 
@@ -274,7 +274,7 @@ public class MainActivity extends AppCompatActivity implements AudioListFragment
             int notificationId = intent.getIntExtra("notificationId", 0);
 
             Log.d("TAG", "Button Receiver onReceive");
-            DownloadService.stopped = true;
+            DownloadService.interrupted = true;
 
             // cancel notification
             NotificationManager manager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);

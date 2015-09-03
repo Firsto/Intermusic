@@ -30,6 +30,19 @@ public class Song extends VKApiAudio {
         super(from);
     }
 
+    public Song(VKApiAudio audio) {
+        this(getParcelFromVKApiAudio(audio));
+    }
+
+    private static Parcel getParcelFromVKApiAudio(VKApiAudio audio) {
+        Parcel parcel = Parcel.obtain();
+        audio.writeToParcel(parcel, 0);
+        parcel.writeInt(0);
+        parcel.writeInt(0);
+        parcel.writeString("");
+        return parcel;
+    }
+
     @Override
     public void writeToParcel(Parcel dest, int flags) {
         super.writeToParcel(dest, flags);

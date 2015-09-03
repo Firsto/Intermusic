@@ -20,7 +20,7 @@ import java.net.URLConnection;
 public class DownloadService extends IntentService {
     public static final String ACTION = DownloadService.class.getSimpleName() + ".broadcast";
     public static final int UPDATE_PROGRESS = 1111;
-    public static volatile boolean stopped = false;
+    public static volatile boolean interrupted = false;
 
     private static final int MAX_BUFFER_SIZE = 1024;
 
@@ -45,12 +45,22 @@ public class DownloadService extends IntentService {
             e.printStackTrace();
         }
 
-        sendResult(id);
+//        try {
+//            Log.d("TAG", "file size = " + file.length()
+//                    + " // path: " + file.getPath()
+//                    + " // abs path " + file.getAbsolutePath()
+//                    + " // canonical path " + file.getCanonicalPath()
+//            );
+//        } catch (IOException e) {
+//            e.printStackTrace();
+//        }
+        sendResult(id, file.length() != 0 ? file.getPath() : "");
     }
 
-    private void sendResult(int id) {
+    private void sendResult(int id, String path) {
         Intent intent = new Intent(ACTION);
         intent.putExtra("id", id);
+        intent.putExtra("path", path);
         sendBroadcast(intent);
     }
 
@@ -63,8 +73,8 @@ public class DownloadService extends IntentService {
             connection.connect();
 
             int fileLength = connection.getContentLength();
-
-            Log.d("TAG", "fileLength = " + fileLength);
+            Log.d("TAG", "fileLength = " + fileLength + " // file.length() = " + file.length());
+            if (file.length() == fileLength) return;
 
             in = new BufferedInputStream(connection.getInputStream());
             fout = new FileOutputStream(file);
@@ -74,7 +84,7 @@ public class DownloadService extends IntentService {
             int progressBuffer = 0;
             int count;
             while ((count = in.read(data, 0, MAX_BUFFER_SIZE)) != -1) {
-                if (stopped) break;
+                if (interrupted) break;
                 total += count;
                 progressBuffer += count;
 
@@ -97,7 +107,10 @@ public class DownloadService extends IntentService {
             if (fout != null) {
                 fout.close();
             }
-            stopped = false;
+            if (interrupted) {
+                file.delete();
+            }
+            interrupted = false;
         }
     }
 
