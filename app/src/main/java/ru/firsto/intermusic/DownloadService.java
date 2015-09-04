@@ -99,6 +99,7 @@ public class DownloadService extends IntentService {
 
                 fout.write(data, 0, count);
             }
+            if (file.length() != fileLength) interrupted = true;
             fout.flush();
         } finally {
             if (in != null) {

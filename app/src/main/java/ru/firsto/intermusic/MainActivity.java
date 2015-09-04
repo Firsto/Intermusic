@@ -219,8 +219,21 @@ public class MainActivity extends AppCompatActivity implements AudioListFragment
         } else {
 //            if (count > 10) count = 10;
             JSONArray items = response.optJSONArray("items");
+            Song song;
             for (int i = 0; i < items.length(); i++) {
-                mAudioList.add(new VKApiAudio(items.getJSONObject(i)));
+                Song apisong = new Song(items.getJSONObject(i));
+                song = mHelper.querySong(apisong.id).getSong();
+                if (song == null) {
+                    song = apisong;
+                    mHelper.insertSong(song);
+                } else {
+                    mHelper.updateSong(apisong);
+                    mHelper.updateSongPath(song.id, song.path);
+                }
+                song.position = i;
+                mHelper.updateSongPosition(song.id, song.position);
+//                mAudioList.add(new VKApiAudio(items.getJSONObject(i)));
+                mAudioList.add(song);
             }
         }
     }
