@@ -17,9 +17,6 @@ import android.widget.ImageButton;
 import android.widget.SeekBar;
 import android.widget.TextView;
 
-import com.vk.sdk.api.model.VKApiAudio;
-
-import java.io.File;
 import java.util.List;
 
 /**
@@ -27,7 +24,7 @@ import java.util.List;
  **/
 public class AudioListAdapter extends RecyclerView.Adapter<AudioListAdapter.AudioViewHolder> {
 
-    private List<VKApiAudio> mAudioList;
+    private List<Song> mAudioList;
     private Activity mContext;
     private AudioPlayer mAudioPlayer;
 
@@ -35,11 +32,12 @@ public class AudioListAdapter extends RecyclerView.Adapter<AudioListAdapter.Audi
 
     private int playingId = -1;
     private int nextId = -1;
+    private int position = -1;
     private int bufferedProgress = 0;
     private boolean played = false;
     private boolean interrupted = false;
 
-    public AudioListAdapter(Activity context, List<VKApiAudio> audioList, AudioPlayer audioPlayer) {
+    public AudioListAdapter(Activity context, List<Song> audioList, AudioPlayer audioPlayer) {
         this.mAudioList = audioList;
         this.mContext = context;
         this.mAudioPlayer = audioPlayer;
@@ -80,18 +78,19 @@ public class AudioListAdapter extends RecyclerView.Adapter<AudioListAdapter.Audi
             mProgressBar = (SeekBar) view.findViewById(R.id.progressBar);
         }
 
-        public void setObj(final VKApiAudio song){
+        public void setObj(final Song song){
             mSongTitle.setText(song.title);
             mAuthor.setText(song.artist);
             mDuration.setText(getDurationString(song.duration));
 
             if (playingId == song.id) {
 
-                int position = mAudioList.indexOf(song);
+                position = mAudioList.indexOf(song);
                 nextId = (position == getItemCount() - 1 ? mAudioList.get(0).id : mAudioList.get(position + 1).id);
 
-                if (mAudioPlayer.play(song.url)) {
+                if (mAudioPlayer.play("".equals(song.path) ? song.url : song.path)) {
                     mAudioPlayer.setListener(bufferingListener);
+                    if (!song.downloaded) mContext.startService(getDownloadIntent(song));
                 }
 
                 mProgressBar.setMax(song.duration);
@@ -134,14 +133,15 @@ public class AudioListAdapter extends RecyclerView.Adapter<AudioListAdapter.Audi
                 mDuration.setVisibility(View.INVISIBLE);
             } else {
                 mPlayButton.setImageDrawable(mContext.getResources().getDrawable(android.R.drawable.ic_media_play));
-                mProgressBar.setVisibility(View.INVISIBLE);
-                mRemaining.setVisibility(View.INVISIBLE);
+                mProgressBar.setVisibility(View.GONE);
+                mRemaining.setVisibility(View.GONE);
                 mDuration.setText(getDurationString(song.duration));
                 mDuration.setVisibility(View.VISIBLE);
             }
 
-            File file = new File(Environment.getExternalStorageDirectory().getPath() + "/Download/" + song.artist + " - " + song.title + ".mp3");
-            if (file.exists()) {
+//            File file = new File(Environment.getExternalStorageDirectory().getPath() + "/Download/" + song.artist + " - " + song.title + ".mp3");
+            if (song.downloaded) {
+                bufferedProgress = 100;
                 mSaveButton.setVisibility(View.INVISIBLE);
             } else {
                 mSaveButton.setVisibility(View.VISIBLE);
@@ -184,14 +184,7 @@ public class AudioListAdapter extends RecyclerView.Adapter<AudioListAdapter.Audi
                             + "\n" + song.artist + " - " + song.title
                     );
 
-                    Intent i = new Intent(mContext, DownloadService.class);
-                    mContext.startService(i
-                                    .putExtra("id", song.id)
-                                    .putExtra("artist", song.artist)
-                                    .putExtra("title", song.title)
-                                    .putExtra("url", song.url)
-                                    .putExtra("receiver", new DownloadReceiver(new Handler(), mContext))
-                    );
+                    mContext.startService(getDownloadIntent(song).putExtra("needNotify", true));
                 }
             });
 
@@ -213,15 +206,33 @@ public class AudioListAdapter extends RecyclerView.Adapter<AudioListAdapter.Audi
             
     }
 
+    private Intent getDownloadIntent(Song song) {
+        Intent i = new Intent(mContext, DownloadService.class);
+        i
+                .putExtra("id", song.id)
+                .putExtra("artist", song.artist)
+                .putExtra("title", song.title)
+                .putExtra("url", song.url)
+                .putExtra("receiver", new DownloadReceiver(new Handler(), mContext));
+        return i;
+    }
+
     private String getDurationString(int duration) {
         return duration / 60 + ":" + ((duration % 60) < 10 ? "0" + duration % 60 : duration % 60);
     }
 
     MediaPlayer.OnBufferingUpdateListener bufferingListener = new MediaPlayer.OnBufferingUpdateListener() {
         public void onBufferingUpdate(MediaPlayer mp, int percent) {
-            //code to increase your secondary seekbar
-            Log.d("TAG", "buffered percent : " + percent);
+            // code to increase secondary seekbar
             bufferedProgress = percent;
+            String path = Environment.getExternalStorageDirectory().getPath() + "/Download/" + mAudioList.get(position).artist + " - " + mAudioList.get(position).title + ".mp3";
+            Log.d("TAG", "song " + mAudioList.get(position).title + " downloaded: " + mAudioList.get(position).downloaded);
+            if (bufferedProgress > 20) {
+                mAudioPlayer.resetSource(path);
+                Log.d("TAG", "player buffer changed");
+                if (mAudioList.get(position).downloaded) bufferedProgress = 100;
+                Log.d("TAG", "song downloaded");
+            }
             if (bufferedProgress == 100) {
                 mp.setOnBufferingUpdateListener(null);
             }

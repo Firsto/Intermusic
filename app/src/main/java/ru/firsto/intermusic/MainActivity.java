@@ -33,13 +33,13 @@ import com.vk.sdk.api.VKError;
 import com.vk.sdk.api.VKParameters;
 import com.vk.sdk.api.VKRequest;
 import com.vk.sdk.api.VKResponse;
-import com.vk.sdk.api.model.VKApiAudio;
 import com.vk.sdk.util.VKUtil;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -52,7 +52,7 @@ public class MainActivity extends AppCompatActivity implements AudioListFragment
     private SharedPreferences mPrefs;
 
     VKAccessToken mToken;
-    List<VKApiAudio> mAudioList = new ArrayList<>();
+    List<Song> mAudioList = new ArrayList<>();
 
     Button mButtonAuth, mButtonLoadList;
 
@@ -220,15 +220,26 @@ public class MainActivity extends AppCompatActivity implements AudioListFragment
 //            if (count > 10) count = 10;
             JSONArray items = response.optJSONArray("items");
             Song song;
+            DBHelper.SongCursor cursor;
             for (int i = 0; i < items.length(); i++) {
                 Song apisong = new Song(items.getJSONObject(i));
-                song = mHelper.querySong(apisong.id).getSong();
-                if (song == null) {
+                cursor = mHelper.querySong(apisong.id);
+                cursor.moveToFirst();
+                song = cursor.getSong();
+                if (song == null || song.id == 0) {
                     song = apisong;
                     mHelper.insertSong(song);
                 } else {
-                    mHelper.updateSong(apisong);
-                    mHelper.updateSongPath(song.id, song.path);
+                    File file = new File(song.path);
+                    if (file.exists()) {
+                        apisong.path = song.path;
+                        apisong.downloaded = true;
+                    }
+                    song = apisong;
+                    mHelper.updateSong(song);
+//                    mHelper.updateSongPath(song.id, path);
+//                    song = cursor.getSong();
+                    Log.d("TAG", "apisong path " + song.path + " // downloaded " + song.downloaded);
                 }
                 song.position = i;
                 mHelper.updateSongPosition(song.id, song.position);
@@ -239,7 +250,7 @@ public class MainActivity extends AppCompatActivity implements AudioListFragment
     }
 
     @Override
-    public List<VKApiAudio> getList() {
+    public List<Song> getList() {
         return mAudioList;
     }
 
@@ -247,36 +258,48 @@ public class MainActivity extends AppCompatActivity implements AudioListFragment
     private BroadcastReceiver completeReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
-            Log.d("TAG", "download complete " + intent.getIntExtra("id", 0) + " // path " + intent.getStringExtra("path"));
+            int id = intent.getIntExtra("id", 0);
+            String path = intent.getStringExtra("path");
+            boolean needNotify = intent.getBooleanExtra("needNotify", false);
+            Log.d("TAG", "download complete " + id + " // path " + path);
 
-            Intent notificationIntent = new Intent(context, MainActivity.class);
+            mHelper.updateSongPath(id, path);
+            DBHelper.SongCursor cursor = mHelper.querySong(id);
+            cursor.moveToFirst();
+            Song song = cursor.getSong();
+            mAudioList.get(song.position).downloaded = song.downloaded;
+            mAudioList.get(song.position).path = song.path;
 
-            PendingIntent contentIntent = PendingIntent.getActivity(context,
-                    0, notificationIntent,
-                    PendingIntent.FLAG_CANCEL_CURRENT);
+            if (needNotify) {
+                Intent notificationIntent = new Intent(context, MainActivity.class);
 
-            Resources res = context.getResources();
-            NotificationCompat.Builder builder = new NotificationCompat.Builder(context);
+                PendingIntent contentIntent = PendingIntent.getActivity(context,
+                        0, notificationIntent,
+                        PendingIntent.FLAG_CANCEL_CURRENT);
 
-            builder.setContentIntent(contentIntent)
-                    .setSmallIcon(android.R.drawable.ic_menu_save)
-                            // большая картинка
-                    .setLargeIcon(BitmapFactory.decodeResource(res, android.R.drawable.ic_menu_save))
-                            //.setTicker(res.getString(R.string.warning)) // текст в строке состояния
-                    .setTicker("Скачивание завершено!")
-                    .setWhen(System.currentTimeMillis())
-                    .setAutoCancel(true)
-                            //.setContentTitle(res.getString(R.string.notifytitle)) // Заголовок уведомления
-                    .setContentTitle("Скачивание завершено")
-                            //.setContentText(res.getString(R.string.notifytext))
-                    .setContentText("Скачивание завершено"); // Текст уведомления
+                Resources res = context.getResources();
+                NotificationCompat.Builder builder = new NotificationCompat.Builder(context);
 
-            // Notification notification = builder.getNotification(); // до API 16
-            Notification notification = builder.build();
+                builder.setContentIntent(contentIntent)
+                        .setSmallIcon(android.R.drawable.ic_menu_save)
+                                // большая картинка
+                        .setLargeIcon(BitmapFactory.decodeResource(res, android.R.drawable.ic_menu_save))
+                                //.setTicker(res.getString(R.string.warning)) // текст в строке состояния
+                        .setTicker("Скачивание завершено!")
+                        .setWhen(System.currentTimeMillis())
+                        .setAutoCancel(true)
+                                //.setContentTitle(res.getString(R.string.notifytitle)) // Заголовок уведомления
+                        .setContentTitle("Скачивание завершено")
+                                //.setContentText(res.getString(R.string.notifytext))
+                        .setContentText("Скачивание завершено"); // Текст уведомления
 
-            NotificationManager notificationManager = (NotificationManager) context
-                    .getSystemService(Context.NOTIFICATION_SERVICE);
-            notificationManager.notify(NOTIFY_ID, notification);
+                // Notification notification = builder.getNotification(); // до API 16
+                Notification notification = builder.build();
+
+                NotificationManager notificationManager = (NotificationManager) context
+                        .getSystemService(Context.NOTIFICATION_SERVICE);
+                notificationManager.notify(NOTIFY_ID, notification);
+            }
         }
     };
 

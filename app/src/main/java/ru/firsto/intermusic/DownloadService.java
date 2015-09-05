@@ -22,7 +22,9 @@ public class DownloadService extends IntentService {
     public static final int UPDATE_PROGRESS = 1111;
     public static volatile boolean interrupted = false;
 
-    private static final int MAX_BUFFER_SIZE = 1024;
+    private static final int MAX_BUFFER_SIZE = 8192;
+
+    private boolean needNotify = false;
 
     public DownloadService() {
         super("DownloadService");
@@ -34,6 +36,7 @@ public class DownloadService extends IntentService {
         String artist = intent.getStringExtra("artist");
         String title = intent.getStringExtra("title");
         String url = intent.getStringExtra("url");
+        needNotify = intent.getBooleanExtra("needNotify", false);
         ResultReceiver receiver = intent.getParcelableExtra("receiver");
 
         Log.d("TAG", "downloader got id " + intent.getIntExtra("id", 0));
@@ -61,6 +64,7 @@ public class DownloadService extends IntentService {
         Intent intent = new Intent(ACTION);
         intent.putExtra("id", id);
         intent.putExtra("path", path);
+        intent.putExtra("needNotify", needNotify);
         sendBroadcast(intent);
     }
 
@@ -93,7 +97,7 @@ public class DownloadService extends IntentService {
                     Bundle resultData = new Bundle();
                     resultData.putInt("progress", progress);
                     Log.d("TAG", "fileLength " + fileLength + " // total " + total + " // progress " + progress);
-                    receiver.send(UPDATE_PROGRESS, resultData);
+                    if (needNotify) receiver.send(UPDATE_PROGRESS, resultData);
                     progressBuffer = 0;
                 }
 

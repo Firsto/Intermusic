@@ -57,7 +57,7 @@ public class DBHelper extends SQLiteOpenHelper {
                         COLUMN_SONG_ACCESS_KEY + " VARCHAR(255), " +
                         COLUMN_SONG_POSITION + " INTEGER, " +
                         COLUMN_SONG_DOWNLOADED + " TINYINT NOT NULL DEFAULT 0, " +
-                        COLUMN_SONG_PATH + " VARCHAR(255) NOT NULL DEFAULT '', " +
+                        COLUMN_SONG_PATH + " VARCHAR(255) NOT NULL DEFAULT '' " +
                         ")"
         );
     }
@@ -115,7 +115,7 @@ public class DBHelper extends SQLiteOpenHelper {
 
     public long updateSongPath(int id, String path) {
         ContentValues cv = new ContentValues();
-        cv.put(COLUMN_SONG_DOWNLOADED, 1);
+        cv.put(COLUMN_SONG_DOWNLOADED, "".equals(path) ? 0 : 1);
         cv.put(COLUMN_SONG_PATH, path);
 
         return getWritableDatabase().update(TABLE_SONGS, cv, COLUMN_SONG_ID + " = ?", new String[]{ String.valueOf(id) } );
@@ -161,7 +161,7 @@ public class DBHelper extends SQLiteOpenHelper {
 
     /**
      * Вспомогательный класс с курсором, возвращающим строки таблицы "songs".
-     * Метод {@link getSong()} возвращает экземпляр Song, представляющий
+     * Метод {getSong()} возвращает экземпляр Song, представляющий
      * текущую строку.
      */
 
@@ -193,6 +193,8 @@ public class DBHelper extends SQLiteOpenHelper {
             parcel.writeInt(getInt(getColumnIndex(COLUMN_SONG_POSITION)));
             parcel.writeInt(getInt(getColumnIndex(COLUMN_SONG_DOWNLOADED)));
             parcel.writeString(getString(getColumnIndex(COLUMN_SONG_PATH)));
+
+            parcel.setDataPosition(0);
 
             return Song.CREATOR.createFromParcel(parcel);
         }

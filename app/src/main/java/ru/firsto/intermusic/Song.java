@@ -40,6 +40,7 @@ public class Song extends VKApiAudio {
         parcel.writeInt(0);
         parcel.writeInt(0);
         parcel.writeString("");
+        parcel.setDataPosition(0);
         return parcel;
     }
 

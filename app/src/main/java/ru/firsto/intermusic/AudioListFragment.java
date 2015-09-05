@@ -9,8 +9,6 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
-import com.vk.sdk.api.model.VKApiAudio;
-
 import java.util.List;
 
 /**
@@ -20,7 +18,7 @@ public class AudioListFragment extends Fragment {
 
     public static final String TAG = "audiolist";
 
-    private List<VKApiAudio> mAudioList;
+    private List<Song> mAudioList;
     private AudioPlayer mAudioPlayer;
 
     private RecyclerView mListAudio;
@@ -72,6 +70,6 @@ public class AudioListFragment extends Fragment {
     }
 
     public interface IAudioList {
-        List<VKApiAudio> getList();
+        List<Song> getList();
     }
 }

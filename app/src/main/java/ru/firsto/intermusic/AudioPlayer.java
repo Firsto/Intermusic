@@ -62,6 +62,21 @@ public class AudioPlayer {
         if (mPlayer != null) mPlayer.setOnBufferingUpdateListener(listener);
     }
 
+    public void resetSource(String source) {
+        if (isPlaying()) {
+            mPlayer.pause();
+            int position = mPlayer.getCurrentPosition();
+            mPlayer.reset();
+            try {
+                mPlayer.setDataSource(source);
+                mPlayer.prepare();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            mPlayer.seekTo(position);
+        }
+    }
+
     public boolean play(String source) {
 
         if (!source.equals(this.source)) {
