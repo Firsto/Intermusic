@@ -22,7 +22,7 @@ public class DownloadService extends IntentService {
     public static final int UPDATE_PROGRESS = 1111;
     public static volatile boolean interrupted = false;
 
-    private static final int MAX_BUFFER_SIZE = 8192;
+    private static final int MAX_BUFFER_SIZE = 16384;
 
     private boolean needNotify = false;
 
@@ -32,6 +32,7 @@ public class DownloadService extends IntentService {
 
     @Override
     protected void onHandleIntent(Intent intent) {
+        interrupted = false;
         int id = intent.getIntExtra("id", 0);
         String artist = intent.getStringExtra("artist");
         String title = intent.getStringExtra("title");

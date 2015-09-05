@@ -2,6 +2,7 @@ package ru.firsto.intermusic;
 
 import android.media.AudioManager;
 import android.media.MediaPlayer;
+import android.util.Log;
 
 import java.io.IOException;
 
@@ -58,16 +59,23 @@ public class AudioPlayer {
         }
     }
 
+    public String getSource() {
+        return source;
+    }
+
     public void setListener(MediaPlayer.OnBufferingUpdateListener listener) {
         if (mPlayer != null) mPlayer.setOnBufferingUpdateListener(listener);
     }
 
     public void resetSource(String source) {
-        if (isPlaying()) {
-            mPlayer.pause();
+        if (isExist()) {
+            boolean playing = isPlaying();
+            Log.d("TAG", "resetSource " + source + " // playing: " + playing);
+            if (playing) mPlayer.pause();
             int position = mPlayer.getCurrentPosition();
             mPlayer.reset();
             try {
+                this.source = source;
                 mPlayer.setDataSource(source);
                 mPlayer.prepare();
             } catch (IOException e) {

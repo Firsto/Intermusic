@@ -96,6 +96,25 @@ public class MainActivity extends AppCompatActivity implements AudioListFragment
             }
         });
 
+        Button removesongs = (Button) findViewById(R.id.removeSongs);
+        removesongs.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                int cnt = 0;
+                for (Song song : mAudioList) {
+                    if (song.downloaded) {
+                        File file = new File(song.path);
+                        if (file.delete()) cnt++;
+                        Log.d("TAG", "deleted: " + song.path);
+                        mHelper.updateSongPath(song.id, "");
+                        mAudioList.get(mAudioList.indexOf(song)).path = "";
+                        mAudioList.get(mAudioList.indexOf(song)).downloaded = false;
+                    }
+                }
+                Log.d("TAG", "deleted " + cnt + " songs");
+            }
+        });
+
         registerReceiver(completeReceiver, new IntentFilter(DownloadService.ACTION));
         registerReceiver(stopReceiver, new IntentFilter(DownloadReceiver.ACTION));
     }

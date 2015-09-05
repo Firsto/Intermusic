@@ -4,7 +4,6 @@ import android.app.Activity;
 import android.content.Intent;
 import android.graphics.Color;
 import android.media.MediaPlayer;
-import android.os.Environment;
 import android.os.Handler;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
@@ -114,6 +113,7 @@ public class AudioListAdapter extends RecyclerView.Adapter<AudioListAdapter.Audi
                             mAudioPlayer.setPosition(seekBar.getProgress() * 1000);
                         }
                         ((TextView) seekBar.getTag()).setText("-" + getDurationString(song.duration - seekBar.getProgress()));
+//                        if (song.downloaded) mSaveButton.setVisibility(View.INVISIBLE);
                     }
 
                     @Override
@@ -181,10 +181,10 @@ public class AudioListAdapter extends RecyclerView.Adapter<AudioListAdapter.Audi
                 @Override
                 public void onClick(View v) {
                     Log.d("TAG", "song.id = " + song.id
-                            + "\n" + song.artist + " - " + song.title
+                                    + "\n" + song.artist + " - " + song.title
                     );
 
-                    mContext.startService(getDownloadIntent(song).putExtra("needNotify", true));
+                    if (!song.downloaded) mContext.startService(getDownloadIntent(song).putExtra("needNotify", true));
                 }
             });
 
@@ -223,21 +223,28 @@ public class AudioListAdapter extends RecyclerView.Adapter<AudioListAdapter.Audi
 
     MediaPlayer.OnBufferingUpdateListener bufferingListener = new MediaPlayer.OnBufferingUpdateListener() {
         public void onBufferingUpdate(MediaPlayer mp, int percent) {
-            // code to increase secondary seekbar
             bufferedProgress = percent;
-            String path = Environment.getExternalStorageDirectory().getPath() + "/Download/" + mAudioList.get(position).artist + " - " + mAudioList.get(position).title + ".mp3";
-            Log.d("TAG", "song " + mAudioList.get(position).title + " downloaded: " + mAudioList.get(position).downloaded);
-            if (bufferedProgress > 20) {
-                mAudioPlayer.resetSource(path);
-                Log.d("TAG", "player buffer changed");
-                if (mAudioList.get(position).downloaded) bufferedProgress = 100;
-                Log.d("TAG", "song downloaded");
-            }
             if (bufferedProgress == 100) {
+                downloadUpdater();
                 mp.setOnBufferingUpdateListener(null);
             }
         }
     };
+
+    private void downloadUpdater() {
+        if (mAudioList.get(position).downloaded && mAudioPlayer.isPlaying()) {
+            if (!mAudioPlayer.getSource().equals(mAudioList.get(position).path)) mAudioPlayer.resetSource(mAudioList.get(position).path);
+            Log.d("TAG", "player buffer: " + mAudioPlayer.getSource());
+            notifyItemChanged(position);
+        } else {
+            Runnable notification = new Runnable() {
+                public void run() {
+                    downloadUpdater();
+                }
+            };
+            handler.postDelayed(notification, 1000);
+        }
+    }
 
     private void interruptUpdater() {
         Log.d("TAG", "interrupted " + interrupted + " -- played " + played + " -- isPlaying " + mAudioPlayer.isPlaying());
@@ -258,7 +265,6 @@ public class AudioListAdapter extends RecyclerView.Adapter<AudioListAdapter.Audi
     }
 
     private void progressUpdater(final AudioViewHolder currentHolder) {
-
         if (mAudioPlayer.isExist() && playingId != nextId) {
             if (mAudioPlayer.isPlaying()) {
                 currentHolder.mProgressBar.setProgress(mAudioPlayer.getPosition() / 1000);
