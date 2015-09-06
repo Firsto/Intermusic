@@ -115,8 +115,13 @@ public class MainActivity extends AppCompatActivity implements AudioListFragment
             }
         });
 
+    }
+
+    @Override
+    protected void onStart() {
         registerReceiver(completeReceiver, new IntentFilter(DownloadService.ACTION));
         registerReceiver(stopReceiver, new IntentFilter(DownloadReceiver.ACTION));
+        super.onStart();
     }
 
     @Override

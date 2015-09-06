@@ -90,6 +90,7 @@ public class AudioListAdapter extends RecyclerView.Adapter<AudioListAdapter.Audi
                 if (mAudioPlayer.play("".equals(song.path) ? song.url : song.path)) {
                     mAudioPlayer.setListener(bufferingListener);
                     if (!song.downloaded) mContext.startService(getDownloadIntent(song));
+                    mContext.startService(getPlayerIntent(song));
                 }
 
                 mProgressBar.setMax(song.duration);
@@ -214,6 +215,14 @@ public class AudioListAdapter extends RecyclerView.Adapter<AudioListAdapter.Audi
                 .putExtra("title", song.title)
                 .putExtra("url", song.url)
                 .putExtra("receiver", new DownloadReceiver(new Handler(), mContext));
+        return i;
+    }
+
+    private Intent getPlayerIntent(Song song) {
+        Intent i = new Intent(mContext, PlayerService.class);
+        i
+                .putExtra("song", song)
+                .putExtra("receiver", new PlayerReceiver(new Handler(), mContext));
         return i;
     }
 

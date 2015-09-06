@@ -11,8 +11,17 @@ import java.io.IOException;
  **/
 public class AudioPlayer {
 
+    private static AudioPlayer sAudioPlayer;
+
     private MediaPlayer mPlayer;
     private String source;
+
+    public static AudioPlayer get() {
+        if (sAudioPlayer == null) {
+            sAudioPlayer = new AudioPlayer();
+        }
+        return sAudioPlayer;
+    }
 
     public void stop() {
         if (mPlayer != null) {

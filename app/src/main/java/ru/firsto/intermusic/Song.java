@@ -1,6 +1,7 @@
 package ru.firsto.intermusic;
 
 import android.os.Parcel;
+import android.os.Parcelable;
 
 import com.vk.sdk.api.model.VKApiAudio;
 
@@ -9,7 +10,7 @@ import org.json.JSONObject;
 /**
  * Created by razor on 02.09.15.
  */
-public class Song extends VKApiAudio {
+public class Song extends VKApiAudio implements Parcelable {
 
     public int position = 0;
     public boolean downloaded = false;

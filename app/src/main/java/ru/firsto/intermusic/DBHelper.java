@@ -10,7 +10,6 @@ import android.database.Cursor;
 import android.database.CursorWrapper;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
-import android.os.Parcel;
 import android.util.Log;
 
 public class DBHelper extends SQLiteOpenHelper {
@@ -178,25 +177,45 @@ public class DBHelper extends SQLiteOpenHelper {
             if (isBeforeFirst() || isAfterLast())
                 return null;
 
-            Parcel parcel = Parcel.obtain();
-            parcel.writeInt(getInt(getColumnIndex(COLUMN_SONG_ID)));
-            parcel.writeInt(getInt(getColumnIndex(COLUMN_SONG_OWNER_ID)));
-            parcel.writeString(getString(getColumnIndex(COLUMN_SONG_ARTIST)));
-            parcel.writeString(getString(getColumnIndex(COLUMN_SONG_TITLE)));
-            parcel.writeInt(getInt(getColumnIndex(COLUMN_SONG_DURATION)));
-            parcel.writeString(getString(getColumnIndex(COLUMN_SONG_URL)));
-            parcel.writeInt(getInt(getColumnIndex(COLUMN_SONG_LYRICS_ID)));
-            parcel.writeInt(getInt(getColumnIndex(COLUMN_SONG_ALBUM_ID)));
-            parcel.writeInt(getInt(getColumnIndex(COLUMN_SONG_GENRE)));
-            parcel.writeString(getString(getColumnIndex(COLUMN_SONG_ACCESS_KEY)));
+            Song song = new Song();
 
-            parcel.writeInt(getInt(getColumnIndex(COLUMN_SONG_POSITION)));
-            parcel.writeInt(getInt(getColumnIndex(COLUMN_SONG_DOWNLOADED)));
-            parcel.writeString(getString(getColumnIndex(COLUMN_SONG_PATH)));
+            song.id = getInt(getColumnIndex(COLUMN_SONG_ID));
+            song.owner_id = getInt(getColumnIndex(COLUMN_SONG_OWNER_ID));
+            song.artist = getString(getColumnIndex(COLUMN_SONG_ARTIST));
+            song.title = getString(getColumnIndex(COLUMN_SONG_TITLE));
+            song.duration = getInt(getColumnIndex(COLUMN_SONG_DURATION));
+            song.url = getString(getColumnIndex(COLUMN_SONG_URL));
+            song.lyrics_id = getInt(getColumnIndex(COLUMN_SONG_LYRICS_ID));
+            song.album_id = getInt(getColumnIndex(COLUMN_SONG_ALBUM_ID));
+            song.genre = getInt(getColumnIndex(COLUMN_SONG_GENRE));
+            song.access_key = getString(getColumnIndex(COLUMN_SONG_ACCESS_KEY));
 
-            parcel.setDataPosition(0);
+            song.position = getInt(getColumnIndex(COLUMN_SONG_POSITION));
+            song.downloaded = getInt(getColumnIndex(COLUMN_SONG_DOWNLOADED)) == 1;
+            song.path = getString(getColumnIndex(COLUMN_SONG_PATH));
 
-            return Song.CREATOR.createFromParcel(parcel);
+            return song;
+
+//            Parcel parcel = Parcel.obtain();
+//            parcel.writeInt(getInt(getColumnIndex(COLUMN_SONG_ID)));
+//            parcel.writeInt(getInt(getColumnIndex(COLUMN_SONG_OWNER_ID)));
+//            parcel.writeString(getString(getColumnIndex(COLUMN_SONG_ARTIST)));
+//            parcel.writeString(getString(getColumnIndex(COLUMN_SONG_TITLE)));
+//            parcel.writeInt(getInt(getColumnIndex(COLUMN_SONG_DURATION)));
+//            parcel.writeString(getString(getColumnIndex(COLUMN_SONG_URL)));
+//            parcel.writeInt(getInt(getColumnIndex(COLUMN_SONG_LYRICS_ID)));
+//            parcel.writeInt(getInt(getColumnIndex(COLUMN_SONG_ALBUM_ID)));
+//            parcel.writeInt(getInt(getColumnIndex(COLUMN_SONG_GENRE)));
+//            parcel.writeString(getString(getColumnIndex(COLUMN_SONG_ACCESS_KEY)));
+//
+//            parcel.writeInt(getInt(getColumnIndex(COLUMN_SONG_POSITION)));
+//            parcel.writeInt(getInt(getColumnIndex(COLUMN_SONG_DOWNLOADED)));
+//            parcel.writeString(getString(getColumnIndex(COLUMN_SONG_PATH)));
+//
+//            parcel.setDataPosition(0);
+//
+//            return Song.CREATOR.createFromParcel(parcel);
+
         }
     }
 }

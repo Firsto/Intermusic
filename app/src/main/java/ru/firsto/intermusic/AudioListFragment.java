@@ -28,11 +28,11 @@ public class AudioListFragment extends Fragment {
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        setRetainInstance(true);
+        mAudioPlayer = AudioPlayer.get();
         if (getActivity() instanceof IAudioList) {
             mAudioList = ((IAudioList) getActivity()).getList();
         }
-
-        mAudioPlayer = new AudioPlayer();
     }
 
     @Override
