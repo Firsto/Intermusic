@@ -13,13 +13,12 @@ import android.os.Handler;
 import android.os.ResultReceiver;
 import android.support.v7.app.NotificationCompat;
 import android.util.Log;
-import android.widget.RemoteViews;
 
 /**
  * Created by razor on 06.09.15.
  */
 public class PlayerReceiver extends ResultReceiver {
-    public static final String ACTION = PlayerReceiver.class.getSimpleName() + ".broadcast";
+    public static final String ACTION_PLAYER = PlayerReceiver.class.getSimpleName() + ".broadcast";
 
     private static final int NOTIFY_ID = 3;
 
@@ -28,13 +27,21 @@ public class PlayerReceiver extends ResultReceiver {
     private NotificationManager notificationManager;
     private Notification notification;
 
+    private Intent switchIntent;
+    private PendingIntent switchPengdingIntent;
     private Intent notificationIntent;
     private PendingIntent notificationPendingIntent;
+
+    private int lastProgress = -1;
+
+    static android.support.v4.app.NotificationCompat.Action actionPause;
+    android.support.v4.app.NotificationCompat.Action actionPlay;
 
     public PlayerReceiver(Handler handler, Context context) {
         super(handler);
         mContext = context;
         notificationManager = (NotificationManager) mContext.getSystemService(Context.NOTIFICATION_SERVICE);
+        lastProgress = -1;
 
         Resources res = context.getResources();
         builder = new NotificationCompat.Builder(mContext);
@@ -48,6 +55,13 @@ public class PlayerReceiver extends ResultReceiver {
         notificationIntent.putExtra("notificationId", NOTIFY_ID);
         notificationPendingIntent = PendingIntent.getActivity(mContext, 0, notificationIntent, PendingIntent.FLAG_UPDATE_CURRENT);
         builder.setContentIntent(notificationPendingIntent);
+
+        switchIntent = new Intent(ACTION_PLAYER);
+        switchPengdingIntent = PendingIntent.getBroadcast(mContext, 0, switchIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+
+        actionPause = new android.support.v4.app.NotificationCompat.Action(android.R.drawable.ic_media_pause, "Pause", switchPengdingIntent);
+        builder.addAction(actionPause);
+
 
 //        android.support.v4.app.NotificationCompat.Action action = new android.support.v4.app.NotificationCompat.Action(android.R.drawable.ic_media_pause, "Pause", notificationPendingIntent);
 //        builder.addAction(action);
@@ -73,22 +87,31 @@ public class PlayerReceiver extends ResultReceiver {
                 builder.setProgress(duration, progress, false);
             }
 
-//            notification = builder.build();
+//            Notification notification = new Notification(android.R.drawable.ic_media_play, null, System.currentTimeMillis());
+//
+//            RemoteViews notificationView = new RemoteViews(mContext.getPackageName(), R.layout.notification_view);
+////            notificationView.setImageViewResource(R.id.play_pause, android.R.drawable.ic_media_pause);
+//            notificationView.setTextViewText(R.id.textView1, title);
+//
+//            notification.contentView = notificationView;
+//            notification.contentIntent = notificationPendingIntent;
+//
+//            Intent switchIntent = new Intent("ACTION_PLAY");
+//            switchIntent.putExtra("not", notification);
+//            PendingIntent pendingSwitchIntent = PendingIntent.getBroadcast(mContext, 0, switchIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+//
+//            android.support.v4.app.NotificationCompat.Action action = new android.support.v4.app.NotificationCompat.Action(android.R.drawable.ic_media_pause, "Pause", pendingSwitchIntent);
+//            builder.addAction(action);
 
-            Notification notification = new Notification(android.R.drawable.ic_media_play, null, System.currentTimeMillis());
+//
+//            notificationView.setOnClickPendingIntent(R.id.play_pause, pendingSwitchIntent);
 
-            RemoteViews notificationView = new RemoteViews(mContext.getPackageName(), R.layout.notification_view);
-            notificationView.setImageViewResource(R.id.play_pause, android.R.drawable.ic_media_pause);
-            notificationView.setTextViewText(R.id.textView1, title);
-
-            notification.contentView = notificationView;
-            notification.contentIntent = notificationPendingIntent;
-
-            Intent switchIntent = new Intent("ACTION_PLAY");
-            switchIntent.putExtra("not", notification);
-            PendingIntent pendingSwitchIntent = PendingIntent.getBroadcast(mContext, 0, switchIntent, PendingIntent.FLAG_UPDATE_CURRENT);
-
-            notificationView.setOnClickPendingIntent(R.id.play_pause, pendingSwitchIntent);
+            notification = builder.build();
+            switchIntent.putExtra("notification", notification);
+            switchPengdingIntent = PendingIntent.getBroadcast(mContext, 0, switchIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+//            actionPause = new android.support.v4.app.NotificationCompat.Action(android.R.drawable.ic_media_pause, "Pause", switchPengdingIntent);
+//            builder.mActions.clear();
+//            builder.addAction(actionPause);
 
             notificationManager.notify(NOTIFY_ID, notification);
             if (progress == duration) {
@@ -102,17 +125,19 @@ public class PlayerReceiver extends ResultReceiver {
         @Override
         public void onReceive(Context context, Intent intent) {
 
-            RemoteViews remoteViews = new RemoteViews(context.getPackageName(),
-                    R.layout.notification_view);
+//            RemoteViews remoteViews = new RemoteViews(context.getPackageName(), R.layout.notification_view);
 
-            if(intent.getAction().equalsIgnoreCase("ACTION_PLAY")){
-                if(AudioPlayer.get().isPlaying() && AudioPlayer.get().getPosition() > 10000){
-                    remoteViews.setImageViewResource(R.id.play_pause, android.R.drawable.ic_media_play);
+            if (intent.getAction().equals(ACTION_PLAYER)) {
+                if (AudioPlayer.get().isPlaying()) {
+//                    remoteViews.setImageViewResource(R.id.play_pause, android.R.drawable.ic_media_play);
+                    actionPause.icon = android.R.drawable.ic_media_play;
+                } else {
+//                    remoteViews.setImageViewResource(R.id.play_pause, android.R.drawable.ic_media_pause);
+                    actionPause.icon = android.R.drawable.ic_media_pause;
                 }
-                else {
-                    remoteViews.setImageViewResource(R.id.play_pause, android.R.drawable.ic_media_pause);
-                }
-                ((NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE)).notify(NOTIFY_ID, (Notification) intent.getParcelableExtra("not"));
+                AudioPlayer.get().pause();
+//                Log.d("TAG", "(Notification) intent.getParcelableExtra(\"notification\") == null : " + (((Notification) intent.getParcelableExtra("notification")) == null));
+                ((NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE)).notify(NOTIFY_ID, (Notification) intent.getParcelableExtra("notification"));
             }
         }
     }
