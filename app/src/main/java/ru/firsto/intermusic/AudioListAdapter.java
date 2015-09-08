@@ -91,6 +91,7 @@ public class AudioListAdapter extends RecyclerView.Adapter<AudioListAdapter.Audi
                     mAudioPlayer.setListener(bufferingListener);
                     if (!song.downloaded) mContext.startService(getDownloadIntent(song));
                     mContext.startService(getPlayerIntent(song));
+                    played = true;
                 }
 
                 mProgressBar.setMax(song.duration);

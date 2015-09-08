@@ -34,8 +34,7 @@ public class PlayerReceiver extends ResultReceiver {
 
     private int lastProgress = -1;
 
-    static android.support.v4.app.NotificationCompat.Action actionPause;
-    android.support.v4.app.NotificationCompat.Action actionPlay;
+    private android.support.v4.app.NotificationCompat.Action actionPause;
 
     public PlayerReceiver(Handler handler, Context context) {
         super(handler);
@@ -109,9 +108,14 @@ public class PlayerReceiver extends ResultReceiver {
             notification = builder.build();
             switchIntent.putExtra("notification", notification);
             switchPengdingIntent = PendingIntent.getBroadcast(mContext, 0, switchIntent, PendingIntent.FLAG_UPDATE_CURRENT);
-//            actionPause = new android.support.v4.app.NotificationCompat.Action(android.R.drawable.ic_media_pause, "Pause", switchPengdingIntent);
-//            builder.mActions.clear();
-//            builder.addAction(actionPause);
+
+            if (AudioPlayer.get().isPlaying()) {
+                actionPause.icon = android.R.drawable.ic_media_pause;
+                actionPause.title = "Pause";
+            } else {
+                actionPause.icon = android.R.drawable.ic_media_play;
+                actionPause.title = "Play";
+            }
 
             notificationManager.notify(NOTIFY_ID, notification);
             if (progress == duration) {
@@ -128,17 +132,17 @@ public class PlayerReceiver extends ResultReceiver {
 //            RemoteViews remoteViews = new RemoteViews(context.getPackageName(), R.layout.notification_view);
 
             if (intent.getAction().equals(ACTION_PLAYER)) {
-                if (AudioPlayer.get().isPlaying()) {
-//                    remoteViews.setImageViewResource(R.id.play_pause, android.R.drawable.ic_media_play);
-                    actionPause.icon = android.R.drawable.ic_media_play;
-                    actionPause.title = "Play";
-                } else {
-//                    remoteViews.setImageViewResource(R.id.play_pause, android.R.drawable.ic_media_pause);
-                    actionPause.icon = android.R.drawable.ic_media_pause;
-                    actionPause.title = "Pause";
-                }
+                // TODO: action button update
+//                if (AudioPlayer.get().isPlaying()) {
+////                    remoteViews.setImageViewResource(R.id.play_pause, android.R.drawable.ic_media_play);
+//                    actionPause.icon = android.R.drawable.ic_media_play;
+//                    actionPause.title = "Play";
+//                } else {
+////                    remoteViews.setImageViewResource(R.id.play_pause, android.R.drawable.ic_media_pause);
+//                    actionPause.icon = android.R.drawable.ic_media_pause;
+//                    actionPause.title = "Pause";
+//                }
                 AudioPlayer.get().pause();
-                Log.d("TAG", "(Notification) intent.getParcelableExtra(\"notification\") == null : " + (((Notification) intent.getParcelableExtra("notification")) == null));
                 ((NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE)).notify(NOTIFY_ID, (Notification) intent.getParcelableExtra("notification"));
             }
         }
