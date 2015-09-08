@@ -37,7 +37,7 @@
         <receiver android:name=".PlayerReceiver$RemoteControlReceiver"
             android:exported="false">
             <intent-filter>
-                <action android:name="ACTION_PLAY"/>
+                <action android:name="PlayerReceiver.broadcast"/>
             </intent-filter>
         </receiver>
     </application>

@@ -131,12 +131,14 @@ public class PlayerReceiver extends ResultReceiver {
                 if (AudioPlayer.get().isPlaying()) {
 //                    remoteViews.setImageViewResource(R.id.play_pause, android.R.drawable.ic_media_play);
                     actionPause.icon = android.R.drawable.ic_media_play;
+                    actionPause.title = "Play";
                 } else {
 //                    remoteViews.setImageViewResource(R.id.play_pause, android.R.drawable.ic_media_pause);
                     actionPause.icon = android.R.drawable.ic_media_pause;
+                    actionPause.title = "Pause";
                 }
                 AudioPlayer.get().pause();
-//                Log.d("TAG", "(Notification) intent.getParcelableExtra(\"notification\") == null : " + (((Notification) intent.getParcelableExtra("notification")) == null));
+                Log.d("TAG", "(Notification) intent.getParcelableExtra(\"notification\") == null : " + (((Notification) intent.getParcelableExtra("notification")) == null));
                 ((NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE)).notify(NOTIFY_ID, (Notification) intent.getParcelableExtra("notification"));
             }
         }
