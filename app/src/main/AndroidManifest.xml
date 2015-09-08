@@ -34,12 +34,6 @@
         <service android:name=".DownloadService"/>
         <service android:name=".PlayerService"/>
 
-        <receiver android:name=".PlayerReceiver$RemoteControlReceiver"
-            android:exported="false">
-            <intent-filter>
-                <action android:name="PlayerReceiver.broadcast"/>
-            </intent-filter>
-        </receiver>
     </application>
 
 </manifest>

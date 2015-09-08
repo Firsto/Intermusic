@@ -82,24 +82,31 @@ public class AudioListAdapter extends RecyclerView.Adapter<AudioListAdapter.Audi
             mAuthor.setText(song.artist);
             mDuration.setText(getDurationString(song.duration));
 
+            if (song.downloaded) {
+                mSaveButton.setVisibility(View.INVISIBLE);
+            } else {
+                mSaveButton.setVisibility(View.VISIBLE);
+            }
+
             if (playingId == song.id) {
 
-                position = mAudioList.indexOf(song);
+                position = song.position;
                 nextId = (position == getItemCount() - 1 ? mAudioList.get(0).id : mAudioList.get(position + 1).id);
+
+                mProgressBar.setMax(song.duration);
 
                 if (mAudioPlayer.play("".equals(song.path) ? song.url : song.path)) {
                     mAudioPlayer.setListener(bufferingListener);
-                    if (!song.downloaded) mContext.startService(getDownloadIntent(song));
+                    if (!song.downloaded) {
+                        mContext.startService(getDownloadIntent(song));
+                    } else {
+                        bufferedProgress = 100;
+                    }
+                    mProgressBar.setProgress(0);
+                    mProgressBar.setSecondaryProgress(bufferedProgress * mProgressBar.getMax() / 100);
                     mContext.startService(getPlayerIntent(song));
                     played = true;
                 }
-
-                mProgressBar.setMax(song.duration);
-//            if (!mAudioPlayer.isPlaying() && !played) {
-//                Log.d("TAG", "init progress bar");
-//                mProgressBar.setProgress(0);
-//                mProgressBar.setSecondaryProgress(0);
-//            }
 
                 interruptUpdater();
                 progressUpdater(this);
@@ -139,14 +146,6 @@ public class AudioListAdapter extends RecyclerView.Adapter<AudioListAdapter.Audi
                 mRemaining.setVisibility(View.GONE);
                 mDuration.setText(getDurationString(song.duration));
                 mDuration.setVisibility(View.VISIBLE);
-            }
-
-//            File file = new File(Environment.getExternalStorageDirectory().getPath() + "/Download/" + song.artist + " - " + song.title + ".mp3");
-            if (song.downloaded) {
-                bufferedProgress = 100;
-                mSaveButton.setVisibility(View.INVISIBLE);
-            } else {
-                mSaveButton.setVisibility(View.VISIBLE);
             }
 
             mPlayButton.setTag(mProgressBar);
@@ -293,6 +292,7 @@ public class AudioListAdapter extends RecyclerView.Adapter<AudioListAdapter.Audi
             handler.postDelayed(notification, 1000);
         }
         else {
+            // TODO: if almost playing but still not initialized ?
 //            mAudioPlayer.pause();
             if (playingId != mAudioList.get(mAudioList.size() - 1).id && playingId > -1) {
                 Log.d("TAG", "INCREASING ID " + playingId + " // nextId = " + nextId);

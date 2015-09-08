@@ -42,6 +42,7 @@ public class PlayerService extends IntentService {
         Bundle resultData = new Bundle();
         resultData.putString("title", song.title);
         resultData.putString("artist", song.artist);
+        resultData.putInt("position", song.position);
         resultData.putInt("duration", song.duration);
         while (mAudioPlayer.isExist() && (mAudioPlayer.getSource().equals(song.path) || mAudioPlayer.getSource().equals(song.url))) {
             try {

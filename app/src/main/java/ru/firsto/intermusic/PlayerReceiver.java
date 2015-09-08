@@ -3,7 +3,6 @@ package ru.firsto.intermusic;
 import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
-import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.res.Resources;
@@ -20,7 +19,7 @@ import android.util.Log;
 public class PlayerReceiver extends ResultReceiver {
     public static final String ACTION_PLAYER = PlayerReceiver.class.getSimpleName() + ".broadcast";
 
-    private static final int NOTIFY_ID = 3;
+    public static final int NOTIFY_ID = 3;
 
     private Context mContext;
     private NotificationCompat.Builder builder;
@@ -107,6 +106,7 @@ public class PlayerReceiver extends ResultReceiver {
 
             notification = builder.build();
             switchIntent.putExtra("notification", notification);
+            switchIntent.putExtra("position", resultData.getInt("position"));
             switchPengdingIntent = PendingIntent.getBroadcast(mContext, 0, switchIntent, PendingIntent.FLAG_UPDATE_CURRENT);
 
             if (AudioPlayer.get().isPlaying()) {
@@ -121,29 +121,6 @@ public class PlayerReceiver extends ResultReceiver {
             if (progress == duration) {
                 Log.d("TAG", "progress ends");
                 notificationManager.cancel(NOTIFY_ID);
-            }
-        }
-    }
-
-    public static class RemoteControlReceiver extends BroadcastReceiver {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-
-//            RemoteViews remoteViews = new RemoteViews(context.getPackageName(), R.layout.notification_view);
-
-            if (intent.getAction().equals(ACTION_PLAYER)) {
-                // TODO: action button update
-//                if (AudioPlayer.get().isPlaying()) {
-////                    remoteViews.setImageViewResource(R.id.play_pause, android.R.drawable.ic_media_play);
-//                    actionPause.icon = android.R.drawable.ic_media_play;
-//                    actionPause.title = "Play";
-//                } else {
-////                    remoteViews.setImageViewResource(R.id.play_pause, android.R.drawable.ic_media_pause);
-//                    actionPause.icon = android.R.drawable.ic_media_pause;
-//                    actionPause.title = "Pause";
-//                }
-                AudioPlayer.get().pause();
-                ((NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE)).notify(NOTIFY_ID, (Notification) intent.getParcelableExtra("notification"));
             }
         }
     }
