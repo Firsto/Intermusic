@@ -92,7 +92,7 @@ public class AudioListAdapter extends RecyclerView.Adapter<AudioListAdapter.Audi
 
                 position = song.position;
                 nextId = (position == getItemCount() - 1 ? mAudioList.get(0).id : mAudioList.get(position + 1).id);
-
+Log.d("TAG", "progressss " + mProgressBar.getProgress() + " // secondary " + mProgressBar.getSecondaryProgress() + " // played " + played + " player ? exist " + mAudioPlayer.isExist() + " / playing " + mAudioPlayer.isPlaying() + " / player position: " + mAudioPlayer.getPosition());
                 mProgressBar.setMax(song.duration);
 
                 if (mAudioPlayer.play("".equals(song.path) ? song.url : song.path)) {
@@ -103,10 +103,12 @@ public class AudioListAdapter extends RecyclerView.Adapter<AudioListAdapter.Audi
                         bufferedProgress = 100;
                     }
                     mProgressBar.setProgress(0);
-                    mProgressBar.setSecondaryProgress(bufferedProgress * mProgressBar.getMax() / 100);
                     mContext.startService(getPlayerIntent(song));
                     played = true;
                 }
+
+                mProgressBar.setProgress(mAudioPlayer.getPosition() / 1000);
+                mProgressBar.setSecondaryProgress(bufferedProgress * mProgressBar.getMax() / 100);
 
                 interruptUpdater();
                 progressUpdater(this);
@@ -277,12 +279,13 @@ public class AudioListAdapter extends RecyclerView.Adapter<AudioListAdapter.Audi
         if (mAudioPlayer.isExist() && playingId != nextId) {
             if (mAudioPlayer.isPlaying()) {
                 currentHolder.mProgressBar.setProgress(mAudioPlayer.getPosition() / 1000);
-            } else if (!played) {
-                Log.d("TAG", "init progress bar / buffered " + bufferedProgress);
-                currentHolder.mProgressBar.setProgress(0);
-                currentHolder.mProgressBar.setSecondaryProgress(0);
             }
-            currentHolder.mProgressBar.setSecondaryProgress(bufferedProgress * currentHolder.mProgressBar.getMax() / 100);
+//            else if (!played) {
+//                Log.d("TAG", "init progress bar / buffered " + bufferedProgress);
+//                currentHolder.mProgressBar.setProgress(0);
+//                currentHolder.mProgressBar.setSecondaryProgress(0);
+//            }
+            if (bufferedProgress < 100) currentHolder.mProgressBar.setSecondaryProgress(bufferedProgress * currentHolder.mProgressBar.getMax() / 100);
 
             Runnable notification = new Runnable() {
                 public void run() {
