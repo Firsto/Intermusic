@@ -2,13 +2,16 @@ package ru.firsto.intermusic;
 
 import android.app.Notification;
 import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.graphics.BitmapFactory;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
+import android.support.v7.app.NotificationCompat;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
@@ -122,7 +125,50 @@ public class AudioListFragment extends Fragment {
                     Log.d("TAG", " -- position " + position + " // " + mAdapter.getItemViewType(position));
                 }
                 AudioPlayer.get().pause();
-                ((NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE)).notify(PlayerReceiver.NOTIFY_ID, (Notification) intent.getParcelableExtra("notification"));
+                Notification notification = intent.getParcelableExtra("notification");
+
+                NotificationCompat.Builder builder = new NotificationCompat.Builder(getActivity());
+
+                builder.setSmallIcon(android.R.drawable.ic_media_play)
+                        .setLargeIcon(BitmapFactory.decodeResource(getActivity().getResources(), android.R.drawable.ic_media_play))
+                        .setTicker("Сейчас играет...")
+                        .setAutoCancel(true);
+
+                Intent notificationIntent = new Intent(getActivity(), MainActivity.class);
+                notificationIntent.putExtra("notificationId", PlayerReceiver.NOTIFY_ID);
+                PendingIntent notificationPendingIntent = PendingIntent.getActivity(getActivity(), 0, notificationIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+                builder.setContentIntent(notificationPendingIntent);
+
+                NotificationCompat.Action action = NotificationCompat.getAction(notification, 0);
+                Log.d("TAG", "action title before: " + action.title);
+                if (AudioPlayer.get().isPlaying()) {
+                    action.icon = android.R.drawable.ic_media_pause;
+                    action.title = "Pause";
+                } else {
+                    action.icon = android.R.drawable.ic_media_play;
+                    action.title = "Play";
+                }
+                Log.d("TAG", "action title after: " + action.title);
+
+                String title = intent.getStringExtra("title");
+                String artist = intent.getStringExtra("artist");
+                int duration = intent.getIntExtra("duration", 0);
+                int progress = intent.getIntExtra("progress", 0);
+
+                builder.setContentTitle(title);
+                builder.setContentText(artist);
+                Log.d("TAG", "playerreceiver onRecieveResult progress = " + progress);
+
+                if (progress < 1) {
+                    builder.setProgress(0, 0, true);
+                } else {
+                    builder.setProgress(duration, progress, false);
+                }
+
+                builder.addAction(action);
+                notification = builder.build();
+
+                ((NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE)).notify(PlayerReceiver.NOTIFY_ID, notification);
             }
         }
     };

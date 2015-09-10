@@ -33,7 +33,7 @@ public class PlayerReceiver extends ResultReceiver {
 
     private int lastProgress = -1;
 
-    private android.support.v4.app.NotificationCompat.Action actionPause;
+    private NotificationCompat.Action actionPause;
 
     public PlayerReceiver(Handler handler, Context context) {
         super(handler);
@@ -57,7 +57,7 @@ public class PlayerReceiver extends ResultReceiver {
         switchIntent = new Intent(ACTION_PLAYER);
         switchPengdingIntent = PendingIntent.getBroadcast(mContext, 0, switchIntent, PendingIntent.FLAG_UPDATE_CURRENT);
 
-        actionPause = new android.support.v4.app.NotificationCompat.Action(android.R.drawable.ic_media_pause, "Pause", switchPengdingIntent);
+        actionPause = new NotificationCompat.Action(android.R.drawable.ic_media_pause, "Pause", switchPengdingIntent);
         builder.addAction(actionPause);
 
 
@@ -106,6 +106,10 @@ public class PlayerReceiver extends ResultReceiver {
 
             notification = builder.build();
             switchIntent.putExtra("notification", notification);
+            switchIntent.putExtra("title", title);
+            switchIntent.putExtra("artist", artist);
+            switchIntent.putExtra("duration", duration);
+            switchIntent.putExtra("progress", progress);
             switchIntent.putExtra("position", resultData.getInt("position"));
             switchPengdingIntent = PendingIntent.getBroadcast(mContext, 0, switchIntent, PendingIntent.FLAG_UPDATE_CURRENT);
 
