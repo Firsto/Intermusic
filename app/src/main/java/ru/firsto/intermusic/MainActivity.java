@@ -43,6 +43,8 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
+import rx.Observable;
+
 public class MainActivity extends AppCompatActivity implements AudioListFragment.IAudioList {
 
     private static final String PREF_FIRST_START = "first_start";
@@ -58,6 +60,8 @@ public class MainActivity extends AppCompatActivity implements AudioListFragment
 
     FragmentManager fm;
     Fragment listFragment;
+
+    RxBroadcastReceiver stopReceiver;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -120,14 +124,26 @@ public class MainActivity extends AppCompatActivity implements AudioListFragment
     @Override
     protected void onStart() {
         registerReceiver(completeReceiver, new IntentFilter(DownloadService.ACTION));
-        registerReceiver(stopReceiver, new IntentFilter(DownloadReceiver.ACTION));
+        stopReceiver = new RxBroadcastReceiver(this, new IntentFilter(DownloadReceiver.ACTION));
+        Observable.create(stopReceiver).subscribe(this::stopDownload);
         super.onStart();
+    }
+
+    private void stopDownload(IntentAggregator aggregator) {
+        int notificationId = aggregator.getIntent().getIntExtra("notificationId", 0);
+
+        Log.d("TAG", "Button Receiver onReceive");
+        DownloadService.interrupted = true;
+
+        // cancel notification
+        NotificationManager manager = (NotificationManager) aggregator.getContext().getSystemService(Context.NOTIFICATION_SERVICE);
+        manager.cancel(notificationId);
     }
 
     @Override
     protected void onStop() {
         unregisterReceiver(completeReceiver);
-        unregisterReceiver(stopReceiver);
+        stopReceiver.unregister();
         super.onStop();
     }
 
@@ -324,21 +340,6 @@ public class MainActivity extends AppCompatActivity implements AudioListFragment
                         .getSystemService(Context.NOTIFICATION_SERVICE);
                 notificationManager.notify(NOTIFY_ID, notification);
             }
-        }
-    };
-
-    private BroadcastReceiver stopReceiver = new BroadcastReceiver() {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-
-            int notificationId = intent.getIntExtra("notificationId", 0);
-
-            Log.d("TAG", "Button Receiver onReceive");
-            DownloadService.interrupted = true;
-
-            // cancel notification
-            NotificationManager manager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
-            manager.cancel(notificationId);
         }
     };
 }
