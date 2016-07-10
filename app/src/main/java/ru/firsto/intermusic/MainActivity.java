@@ -23,6 +23,7 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
 
+import com.orhanobut.logger.Logger;
 import com.vk.sdk.VKAccessToken;
 import com.vk.sdk.VKCallback;
 import com.vk.sdk.VKScope;
@@ -254,6 +255,7 @@ public class MainActivity extends AppCompatActivity implements AudioListFragment
     private void parseJSON(JSONObject response) throws JSONException {
         int count = response.optInt("count", 0);
         Log.d("TAG", "count: " + count);
+//        Logger.json(response.toString());
         if (count == 0) {
             return;
         } else {
@@ -279,7 +281,8 @@ public class MainActivity extends AppCompatActivity implements AudioListFragment
                     mHelper.updateSong(song);
 //                    mHelper.updateSongPath(song.id, path);
 //                    song = cursor.getSong();
-                    Log.d("TAG", "apisong path " + song.path + " // downloaded " + song.downloaded);
+                    Logger.init("MainActivity").hideThreadInfo();
+                    Logger.d("apisong path " + song.path + " // downloaded " + song.downloaded);
                 }
                 song.position = i;
                 mHelper.updateSongPosition(song.id, song.position);
